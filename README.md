@@ -11,7 +11,7 @@ A [NeosModLoader](https://github.com/zkxs/NeosModLoader) mod for [Neos VR](https
 ## Info
 This is a fork of [IKCulling](https://github.com/KyuubiYoru/IkCulling/) that aims to improve it's efficiency. No new features are planned as of now but I may make more changes and additions in the future.
 
-## Notes for building yourself
+## Notes for building from source
 Add the following .dll files to the included `Libraries` folder
 - 0Harmony.dll
 - BaseX.dll
