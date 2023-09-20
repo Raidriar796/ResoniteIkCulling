@@ -67,7 +67,7 @@ namespace IkCulling
 
         public override string Name => "IkCulling";
         public override string Author => "KyuubiYoru (Modified by Raidriar796)";
-        public override string Version => "1.4.1";
+        public override string Version => "1.4.2";
         public override string Link => "https://github.com/Raidriar796/IkCulling";
 
         public override void OnEngineInit()
@@ -111,6 +111,12 @@ namespace IkCulling
         [HarmonyPatch(typeof(VRIKAvatar))]
         public class IkCullingPatch
         {
+
+            public static float Sqr(float num)
+            {
+                return (num * num);
+            }
+
             [HarmonyPrefix]
             [HarmonyPatch("OnCommonUpdate")]
             private static bool OnCommonUpdatePrefix(VRIKAvatar __instance)
@@ -145,18 +151,18 @@ namespace IkCulling
 
                     float dist = MathX.DistanceSqr(playerPos, ikPos);
 
-                    if (_useUserScale) dist = dist / (__instance.LocalUserRoot.GlobalScale * __instance.LocalUserRoot.GlobalScale);
+                    if (_useUserScale) dist = dist / Sqr(__instance.LocalUserRoot.GlobalScale);
 
                     if (_useOtherUserScale)
                         if (__instance.Slot.ActiveUser != null)
-                            dist = dist / (__instance.Slot.ActiveUser.Root.GlobalScale * __instance.Slot.ActiveUser.Root.GlobalScale);
+                            dist = dist / Sqr(__instance.Slot.ActiveUser.Root.GlobalScale);
 
                     float dot = MathX.Dot(dirToIk, viewDir);
 
 
-                    if (dist > (_maxViewRange * _maxViewRange)) return false;
+                    if (dist > Sqr(_maxViewRange)) return false;
 
-                    if (dist > (_minCullingRange * _minCullingRange) && dot < _fov) return false;
+                    if (dist > Sqr(_minCullingRange) && dot < _fov) return false;
 
                     return true;
                 }
