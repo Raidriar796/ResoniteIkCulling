@@ -66,9 +66,9 @@ namespace IkCulling
             new ConditionalWeakTable<VRIKAvatar, FullBodyCalibrator>();
 
         public override string Name => "IkCulling";
-        public override string Author => "KyuubiYoru";
-        public override string Version => "1.4.0";
-        public override string Link => "https://github.com/KyuubiYoru/IkCulling";
+        public override string Author => "KyuubiYoru (Modified by Raidriar796)";
+        public override string Version => "1.4.1";
+        public override string Link => "https://github.com/Raidriar796/IkCulling";
 
         public override void OnEngineInit()
         {
@@ -143,20 +143,20 @@ namespace IkCulling
                     float3 dirToIk = (ikPos - playerPos).Normalized;
                     float3 viewDir = playerViewRot * float3.Forward;
 
-                    float dist = MathX.Distance(playerPos, ikPos);
+                    float dist = MathX.DistanceSqr(playerPos, ikPos);
 
-                    if (_useUserScale) dist = dist / __instance.LocalUserRoot.GlobalScale;
+                    if (_useUserScale) dist = dist / (__instance.LocalUserRoot.GlobalScale * __instance.LocalUserRoot.GlobalScale);
 
                     if (_useOtherUserScale)
                         if (__instance.Slot.ActiveUser != null)
-                            dist = dist / __instance.Slot.ActiveUser.Root.GlobalScale;
+                            dist = dist / (__instance.Slot.ActiveUser.Root.GlobalScale * __instance.Slot.ActiveUser.Root.GlobalScale);
 
                     float dot = MathX.Dot(dirToIk, viewDir);
 
 
-                    if (dist > _maxViewRange) return false;
+                    if (dist > (_maxViewRange * _maxViewRange)) return false;
 
-                    if (dist > _minCullingRange && dot < _fov) return false;
+                    if (dist > (_minCullingRange * _minCullingRange) && dot < _fov) return false;
 
                     return true;
                 }

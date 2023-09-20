@@ -2,29 +2,29 @@
 
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
-    <Version>1.4.0</Version>
-    <AssemblyVersion>1.4.0</AssemblyVersion>
-    <FileVersion>1.4.0</FileVersion>
+    <Version>1.4.1</Version>
+    <AssemblyVersion>1.4.1</AssemblyVersion>
+    <FileVersion>1.4.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>..\..\..\..\NeosVR\Install\app\0Harmony.dll</HintPath>
+      <HintPath>..\Libraries\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="BaseX">
-      <HintPath>..\..\..\..\NeosVR\Install\app\Neos_Data\Managed\BaseX.dll</HintPath>
+      <HintPath>..\Libraries\BaseX.dll</HintPath>
     </Reference>
     <Reference Include="FrooxEngine">
-      <HintPath>..\..\..\..\NeosVR\Install\app\Neos_Data\Managed\FrooxEngine.dll</HintPath>
+      <HintPath>..\Libraries\FrooxEngine.dll</HintPath>
     </Reference>
     <Reference Include="NeosModLoader">
-      <HintPath>..\..\..\..\NeosVR\Install\app\NeosModLoader.dll</HintPath>
+      <HintPath>..\Libraries\NeosModLoader.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\..\..\..\NeosVR\Install\app\UnityEngine.dll</HintPath>
+      <HintPath>..\Libraries\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityNeos">
-      <HintPath>..\..\..\..\NeosVR\Install\app\Neos_Data\Managed\UnityNeos.dll</HintPath>
+      <HintPath>..\Libraries\UnityNeos.dll</HintPath>
     </Reference>
   </ItemGroup>
 
@@ -42,9 +42,5 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy &quot;$(TargetDir)$(TargetFileName)&quot; E:\NeosVR\Install\app\nml_mods\ /y" />
-  </Target>
 
 </Project>

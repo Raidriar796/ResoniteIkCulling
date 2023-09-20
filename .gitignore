@@ -338,3 +338,9 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+Libraries/0Harmony.dll
+Libraries/BaseX.dll
+Libraries/FrooxEngine.dll
+Libraries/NeosModLoader.dll
+Libraries/UnityEngine.dll
+Libraries/UnityNeos.dll
