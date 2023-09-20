@@ -27,7 +27,7 @@ namespace IkCulling
                 () => true);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<int> MinUserCount =
-            new ModConfigurationKey<int>("MinUserCount", "Min amount of active users in the world to enable ik culling.",
+            new ModConfigurationKey<int>("MinUserCount", "Min amount of active users in the world to enable ik culling. (including headless)",
                 () => 3);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> UseUserScale =
@@ -67,7 +67,7 @@ namespace IkCulling
 
         public override string Name => "IkCulling";
         public override string Author => "KyuubiYoru (Modified by Raidriar796)";
-        public override string Version => "1.4.2";
+        public override string Version => "1.5.0";
         public override string Link => "https://github.com/Raidriar796/IkCulling";
 
         public override void OnEngineInit()
@@ -92,6 +92,10 @@ namespace IkCulling
             }
         }
 
+        public static float Sqr(float num) {
+                return (num * num);
+            }
+
         private void RefreshConfigState(ConfigurationChangedEvent configurationChangedEvent = null)
         {
             _enabled = Config.GetValue(Enabled);
@@ -101,8 +105,8 @@ namespace IkCulling
             _useUserScale = Config.GetValue(UseUserScale);
             _useOtherUserScale = Config.GetValue(UseOtherUserScale);
             _fov = Config.GetValue(Fov);
-            _minCullingRange = Config.GetValue(MinCullingRange);
-            _maxViewRange = Config.GetValue(MaxViewRange);
+            _minCullingRange = Sqr(Config.GetValue(MinCullingRange));
+            _maxViewRange = Sqr(Config.GetValue(MaxViewRange));
 
             if (Config.GetValue(AutoSaveConfig) || Equals(configurationChangedEvent?.Key, AutoSaveConfig))
                 Config.Save(true);
@@ -112,11 +116,6 @@ namespace IkCulling
         public class IkCullingPatch
         {
 
-            public static float Sqr(float num)
-            {
-                return (num * num);
-            }
-
             [HarmonyPrefix]
             [HarmonyPatch("OnCommonUpdate")]
             private static bool OnCommonUpdatePrefix(VRIKAvatar __instance)
@@ -125,20 +124,20 @@ namespace IkCulling
                 {
                     if (!_enabled) return true; //IkCulling is Disabled
 
-                    if (_calibrators.TryGetValue(__instance, out _)) return true;
-                    
-                    if (__instance.LocalUser.HeadDevice == HeadOutputDevice.Headless) return false;
+                    if (__instance.IsUnderLocalUser) return true; //Always Update local Ik
 
                     if (!__instance.Enabled) return false; //Ik is Disabled
 
-                    if (__instance.IsUnderLocalUser) return true; //Always Update local Ik
+                    if (__instance.LocalUser.HeadDevice == HeadOutputDevice.Headless) return false;
+
+                    if (__instance.Slot.World.UserCount < _minUserCount) return true;
 
                     if (_disableIkWithoutUser && !__instance.IsEquipped) return false;
 
                     if (__instance.Slot.ActiveUser != null && _disableAfkUser &&
                         !__instance.Slot.ActiveUser.IsPresentInWorld) return false;
 
-                    if (__instance.Slot.World.UserCount < _minUserCount) return true;
+                    if (_calibrators.TryGetValue(__instance, out _)) return true;
 
 
                     float3 playerPos = __instance.Slot.World.LocalUserViewPosition;
@@ -157,12 +156,9 @@ namespace IkCulling
                         if (__instance.Slot.ActiveUser != null)
                             dist = dist / Sqr(__instance.Slot.ActiveUser.Root.GlobalScale);
 
-                    float dot = MathX.Dot(dirToIk, viewDir);
+                    if (dist > _maxViewRange) return false;
 
-
-                    if (dist > Sqr(_maxViewRange)) return false;
-
-                    if (dist > Sqr(_minCullingRange) && dot < _fov) return false;
+                    if (dist > _minCullingRange && MathX.Dot(dirToIk, viewDir) < _fov) return false;
 
                     return true;
                 }
@@ -176,12 +172,10 @@ namespace IkCulling
             }
         }
 
-        [HarmonyPatch(typeof(FullBodyCalibrator))]
+        [HarmonyPatch(typeof(FullBodyCalibrator), "OnAttach")]
         public class FullBodyCalibratorPath
         {
-            [HarmonyPostfix]
-            [HarmonyPatch("OnAttach")]
-            private static void OnAttachPostfix(FullBodyCalibrator __instance)
+            private static void Postfix(FullBodyCalibrator __instance)
             {
                 try
                 {
@@ -194,6 +188,17 @@ namespace IkCulling
                     Debug("Error in OnAttachPostfix");
                     Debug(e.Message);
                     Debug(e.StackTrace);
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(FullBodyCalibrator), "CalibrateAvatar")]
+        class FullBodyCalibrator_CalibrateAvatar_Patch {
+           
+            public static void Postfix(FullBodyCalibrator __instance) {
+                var allVRIK = __instance.Slot.GetComponentsInChildren<VRIK>();
+                foreach (var vrik in allVRIK) {
+                    vrik.AutoUpdate.Value = true;
                 }
             }
         }

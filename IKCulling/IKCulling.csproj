@@ -1,46 +1,47 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
-    <Version>1.4.2</Version>
-    <AssemblyVersion>1.4.2</AssemblyVersion>
-    <FileVersion>1.4.2</FileVersion>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>..\Libraries\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="BaseX">
-      <HintPath>..\Libraries\BaseX.dll</HintPath>
-    </Reference>
-    <Reference Include="FrooxEngine">
-      <HintPath>..\Libraries\FrooxEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="NeosModLoader">
-      <HintPath>..\Libraries\NeosModLoader.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>..\Libraries\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityNeos">
-      <HintPath>..\Libraries\UnityNeos.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties\Settings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-
+    <PropertyGroup>
+        <ProjectGuid>{CE8BB933-8E61-419C-A334-FA3CFC5E4E72}</ProjectGuid>
+        <OutputType>Library</OutputType>
+        <AppDesignerFolder>Properties</AppDesignerFolder>
+        <RootNamespace>Mod</RootNamespace>
+        <AssemblyTitle>Mod</AssemblyTitle>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <TargetFramework>net472</TargetFramework>
+        <FileAlignment>512</FileAlignment>
+        <LangVersion>latest</LangVersion>
+        <Deterministic>true</Deterministic>
+        <CopyLocal>false</CopyLocal>
+        <DebugSymbols Condition="'$(Configuration)'=='Release'">false</DebugSymbols>
+        <DebugType Condition="'$(Configuration)'=='Release'">None</DebugType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(NeosPath)'==''">
+        <NeosPath Condition="Exists('C:\Program Files (x86)\Steam\steamapps\common\NeosVR\')">C:\Program Files (x86)\Steam\steamapps\common\NeosVR\</NeosPath>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="NeosModLoader">
+            <HintPath>$(NeosPath)Libraries\NeosModLoader.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="HarmonyLib">
+            <HintPath>$(NeosPath)nml_libs\0Harmony.dll</HintPath>
+            <HintPath Condition="Exists('$(NeosPath)0Harmony.dll')">$(NeosPath)0Harmony.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="FrooxEngine">
+            <HintPath>$(NeosPath)Neos_Data\Managed\FrooxEngine.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="BaseX">
+            <HintPath>$(NeosPath)Neos_Data\Managed\BaseX.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine">
+            <HintPath>$(NeosPath)Neos_Data\Managed\UnityEngine.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityNeos">
+            <HintPath>$(NeosPath)Neos_Data\Managed\UnityNeos.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+    </ItemGroup>
 </Project>
