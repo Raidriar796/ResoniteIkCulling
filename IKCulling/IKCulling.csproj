@@ -3,8 +3,8 @@
         <ProjectGuid>{CE8BB933-8E61-419C-A334-FA3CFC5E4E72}</ProjectGuid>
         <OutputType>Library</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>Mod</RootNamespace>
-        <AssemblyTitle>Mod</AssemblyTitle>
+        <RootNamespace>IKCulling</RootNamespace>
+        <AssemblyTitle>IKCulling</AssemblyTitle>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <TargetFramework>net472</TargetFramework>
         <FileAlignment>512</FileAlignment>
