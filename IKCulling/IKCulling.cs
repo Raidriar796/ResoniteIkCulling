@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using BaseX;
+using Elements.Core;
 using FrooxEngine;
 using FrooxEngine.FinalIK;
 using HarmonyLib;
-using NeosModLoader;
+using ResoniteModLoader;
 
 namespace IkCulling
 {
-    public class IkCulling : NeosMod
+    public class IkCulling : ResoniteMod
     {
         public static ModConfiguration Config;
 
@@ -67,7 +67,7 @@ namespace IkCulling
 
         public override string Name => "IkCulling";
         public override string Author => "KyuubiYoru (Modified by Raidriar796)";
-        public override string Version => "1.5.0";
+        public override string Version => "1.5.1";
         public override string Link => "https://github.com/Raidriar796/IkCulling";
 
         public override void OnEngineInit()
