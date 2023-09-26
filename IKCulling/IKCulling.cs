@@ -67,7 +67,7 @@ namespace IkCulling
 
         public override string Name => "IkCulling";
         public override string Author => "KyuubiYoru (Modified by Raidriar796)";
-        public override string Version => "1.5.1";
+        public override string Version => "1.5.2";
         public override string Link => "https://github.com/Raidriar796/IkCulling";
 
         public override void OnEngineInit()
