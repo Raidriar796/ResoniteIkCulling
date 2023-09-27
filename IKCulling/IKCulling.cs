@@ -17,17 +17,13 @@ namespace IkCulling
             new ModConfigurationKey<bool>("Enabled", "IkCulling Enabled.", () => true);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> DisableAfkUser =
-            new ModConfigurationKey<bool>("DisableAfkUser", "Disable User not in the World.", () => true);
+            new ModConfigurationKey<bool>("DisableAfkUser", "Disable IK's of users not in the session.", () => true);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> DisableIkWithoutUser =
-            new ModConfigurationKey<bool>("DisableIkWithoutUser", "Disable Ik's without active user.", () => true);
-
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> AutoSaveConfig =
-            new ModConfigurationKey<bool>("AutoSaveConfig", "If true the Config gets saved after every change.",
-                () => true);
+            new ModConfigurationKey<bool>("DisableIkWithoutUser", "Disable IK's without active user.", () => true);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<int> MinUserCount =
-            new ModConfigurationKey<int>("MinUserCount", "Min amount of active users in the world to enable ik culling. (including headless)",
+            new ModConfigurationKey<int>("MinUserCount", "Min amount of active users in the world to enable ik culling.",
                 () => 3);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> UseUserScale =
@@ -39,8 +35,8 @@ namespace IkCulling
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> Fov = new ModConfigurationKey<float>(
             "Fov",
-            "Field of view used for IkCulling, can be between 1 and -1.",
-            () => 0.5f, false, v => v <= 1f && v >= -1f);
+            "Field of view used for IkCulling, can be between 1 (fully fov culled) and -1 (never fov culled).",
+            () => 0.6f, false, v => v <= 1f && v >= -1f);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> MinCullingRange =
             new ModConfigurationKey<float>("MinCullingRange",
@@ -51,38 +47,21 @@ namespace IkCulling
             new ModConfigurationKey<float>("MaxViewRange", "Maximal view range where IkCulling is always enabled.",
                 () => 30);
 
-
-        private static bool _enabled = true;
-        private static bool _disableAfkUser = true;
-        private static bool _disableIkWithoutUser = true;
-        private static int _minUserCount = 1;
-        private static bool _useUserScale;
-        private static bool _useOtherUserScale;
-        private static float _fov = 0.7f;
-        private static float _minCullingRange = 4;
-        private static float _maxViewRange = 30;
-
-        private static ConditionalWeakTable<VRIKAvatar, FullBodyCalibrator> _calibrators =
-            new ConditionalWeakTable<VRIKAvatar, FullBodyCalibrator>();
-
         public override string Name => "IkCulling";
-        public override string Author => "KyuubiYoru (Modified by Raidriar796)";
-        public override string Version => "1.5.3";
+        public override string Author => "Raidriar796 & KyuubiYoru";
+        public override string Version => "2.0.0";
         public override string Link => "https://github.com/Raidriar796/IkCulling";
 
         public override void OnEngineInit()
         {
             try
             {
-                Harmony harmony = new Harmony("net.KyuubiYoru.IkCulling");
+                Harmony harmony = new Harmony("net.Raidriar796.IkCulling");
                 harmony.PatchAll();
 
                 Config = GetConfiguration();
-                Config.OnThisConfigurationChanged += RefreshConfigState;
 
                 Config.Save(true);
-
-                RefreshConfigState();
             }
             catch (Exception e)
             {
@@ -96,22 +75,7 @@ namespace IkCulling
                 return (num * num);
             }
 
-        private void RefreshConfigState(ConfigurationChangedEvent configurationChangedEvent = null)
-        {
-            _enabled = Config.GetValue(Enabled);
-            _disableAfkUser = Config.GetValue(DisableAfkUser);
-            _disableIkWithoutUser = Config.GetValue(DisableIkWithoutUser);
-            _minUserCount = Config.GetValue(MinUserCount);
-            _useUserScale = Config.GetValue(UseUserScale);
-            _useOtherUserScale = Config.GetValue(UseOtherUserScale);
-            _fov = Config.GetValue(Fov);
-            _minCullingRange = Sqr(Config.GetValue(MinCullingRange));
-            _maxViewRange = Sqr(Config.GetValue(MaxViewRange));
-
-            if (Config.GetValue(AutoSaveConfig) || Equals(configurationChangedEvent?.Key, AutoSaveConfig))
-                Config.Save(true);
-        }
-
+        
         [HarmonyPatch(typeof(VRIKAvatar))]
         public class IkCullingPatch
         {
@@ -122,43 +86,36 @@ namespace IkCulling
             {
                 try
                 {
-                    if (!_enabled) return true; //IkCulling is Disabled
+                    if (!Config.GetValue(Enabled)) return true; //IkCulling is Disabled
+
+                    if (__instance.LocalUser.HeadDevice == HeadOutputDevice.Headless) return false; //User is Headless
 
                     if (__instance.IsUnderLocalUser) return true; //Always Update local Ik
 
                     if (!__instance.Enabled) return false; //Ik is Disabled
 
-                    if (__instance.LocalUser.HeadDevice == HeadOutputDevice.Headless) return false;
+                    if (__instance.Slot.ActiveUser != null && Config.GetValue(DisableAfkUser) &&
+                        !__instance.Slot.ActiveUser.IsPresentInWorld) return false; //Users not present
 
-                    if (__instance.Slot.World.UserCount < _minUserCount) return true;
+                    if (Config.GetValue(DisableIkWithoutUser) && !__instance.IsEquipped) return false; //No active user
 
-                    if (_disableIkWithoutUser && !__instance.IsEquipped) return false;
+                    if (__instance.Slot.World.ActiveUserCount < Config.GetValue(MinUserCount)) return true; //Too few users
 
-                    if (__instance.Slot.ActiveUser != null && _disableAfkUser &&
-                        !__instance.Slot.ActiveUser.IsPresentInWorld) return false;
-
-                    if (_calibrators.TryGetValue(__instance, out _)) return true;
-
-
+                    
                     float3 playerPos = __instance.Slot.World.LocalUserViewPosition;
-                    floatQ playerViewRot = __instance.Slot.World.LocalUserViewRotation;
                     float3 ikPos = __instance.HeadProxy.GlobalPosition;
-
-
-                    float3 dirToIk = (ikPos - playerPos).Normalized;
-                    float3 viewDir = playerViewRot * float3.Forward;
 
                     float dist = MathX.DistanceSqr(playerPos, ikPos);
 
-                    if (_useUserScale) dist = dist / Sqr(__instance.LocalUserRoot.GlobalScale);
+                    if (Config.GetValue(UseUserScale)) dist = dist / Sqr(__instance.LocalUserRoot.GlobalScale);
 
-                    if (_useOtherUserScale)
+                    if (Config.GetValue(UseOtherUserScale))
                         if (__instance.Slot.ActiveUser != null)
                             dist = dist / Sqr(__instance.Slot.ActiveUser.Root.GlobalScale);
 
-                    if (dist > _maxViewRange) return false;
+                    if (dist > Sqr(Config.GetValue(MaxViewRange))) return false;
 
-                    if (dist > _minCullingRange && MathX.Dot(dirToIk, viewDir) < _fov) return false;
+                    if (dist > Sqr(Config.GetValue(MinCullingRange)) && MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < Config.GetValue(Fov)) return false;
 
                     return true;
                 }
@@ -172,35 +129,29 @@ namespace IkCulling
             }
         }
 
-        [HarmonyPatch(typeof(FullBodyCalibrator), "OnAttach")]
-        public class FullBodyCalibratorPath
-        {
-            private static void Postfix(FullBodyCalibrator __instance)
-            {
-                try
-                {
-                    Traverse traverse = Traverse.Create(__instance).Field("_platformBody").Field("_vrIkAvatar");
-                    SyncRef<VRIKAvatar> vrikAvatar = traverse.GetValue<SyncRef<VRIKAvatar>>();
-                    vrikAvatar.OnTargetChange += reference => _calibrators.Add(reference, null);
-                }
-                catch (Exception e)
-                {
-                    Debug("Error in OnAttachPostfix");
-                    Debug(e.Message);
-                    Debug(e.StackTrace);
-                }
+        public static void CalibratorForceIkAutoUpdate(FullBodyCalibrator __instance) {
+            var allVRIK = __instance.Slot.GetComponentsInChildren<VRIK>();
+            foreach (var vrik in allVRIK) {
+                vrik.AutoUpdate.Value = true;
             }
         }
 
-        [HarmonyPatch(typeof(FullBodyCalibrator), "CalibrateAvatar")]
-        class FullBodyCalibrator_CalibrateAvatar_Patch {
-           
-            public static void Postfix(FullBodyCalibrator __instance) {
-                var allVRIK = __instance.Slot.GetComponentsInChildren<VRIK>();
-                foreach (var vrik in allVRIK) {
-                    vrik.AutoUpdate.Value = true;
-                }
+        [HarmonyPatch(typeof(FullBodyCalibrator), "OnAttach")]
+        class FullBodyCalibratorPatch {
+            
+            static void Postfix(FullBodyCalibrator __instance) {
+                CalibratorForceIkAutoUpdate(__instance);
             }
+
+        }
+
+        [HarmonyPatch(typeof(FullBodyCalibrator), "CalibrateAvatar")]
+        class FullBodyCalibratorAvatarPatch {
+
+            static void Postfix(FullBodyCalibrator __instance) {
+                CalibratorForceIkAutoUpdate(__instance);
+            }
+            
         }
     }
 }
