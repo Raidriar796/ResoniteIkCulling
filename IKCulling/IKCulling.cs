@@ -49,7 +49,7 @@ namespace IkCulling
 
         public override string Name => "IkCulling";
         public override string Author => "Raidriar796 & KyuubiYoru";
-        public override string Version => "2.0.0";
+        public override string Version => "2.1.0";
         public override string Link => "https://github.com/Raidriar796/IkCulling";
 
         public override void OnEngineInit()
@@ -136,18 +136,22 @@ namespace IkCulling
             }
         }
 
-        [HarmonyPatch(typeof(FullBodyCalibrator), "OnAttach")]
+    
+        [HarmonyPatch(typeof(FullBodyCalibrator), "OnAwake")]
         class FullBodyCalibratorPatch {
             
+            [HarmonyPostfix]
             static void Postfix(FullBodyCalibrator __instance) {
-                CalibratorForceIkAutoUpdate(__instance);
+                __instance.RunInUpdates(3, ()=> {
+                    CalibratorForceIkAutoUpdate(__instance);
+                });
             }
-
         }
 
         [HarmonyPatch(typeof(FullBodyCalibrator), "CalibrateAvatar")]
         class FullBodyCalibratorAvatarPatch {
 
+            [HarmonyPostfix]
             static void Postfix(FullBodyCalibrator __instance) {
                 CalibratorForceIkAutoUpdate(__instance);
             }
