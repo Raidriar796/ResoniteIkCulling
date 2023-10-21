@@ -48,12 +48,12 @@ namespace IkCulling
                 "Use other user's scale for distance checks.",
                 () => false);
 
-        [Range(-1f, 1f)]
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> Fov = 
+        [Range(0f, 360f)]
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> FOV = 
             new ModConfigurationKey<float>(
                 "FOV",
-                "Field of view used for culling, ranging from never culled (-1) to fully culled (1).",
-                () => 0.6f, false, v => v <= 1f && v >= -1f);
+                "Field of view used for culling, ranging from 0 degrees to 360 degrees.",
+                () => 110.0f, false, v => v <= 360.0f && v >= 0.0f);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> MinCullingRange =
             new ModConfigurationKey<float>(
@@ -69,7 +69,7 @@ namespace IkCulling
 
         public override string Name => "ResoniteIkCulling";
         public override string Author => "Raidriar796 & KyuubiYoru";
-        public override string Version => "2.1.1";
+        public override string Version => "2.2.0";
         public override string Link => "https://github.com/Raidriar796/ResoniteIkCulling";
 
         public override void OnEngineInit()
@@ -92,8 +92,8 @@ namespace IkCulling
         }
 
         public static float Sqr(float num) {
-                return (num * num);
-            }
+            return (num * num);
+        }
         
         [HarmonyPatch(typeof(VRIKAvatar))]
         public class IkCullingPatch
@@ -142,10 +142,14 @@ namespace IkCulling
                             dist = dist / Sqr(__instance.Slot.ActiveUser.Root.GlobalScale);
 
                     //Check if IK is outside of max range
-                    if (dist > Sqr(Config.GetValue(MaxViewRange))) return false;
+                    if (dist > Sqr(Config.GetValue(MaxViewRange))) 
+                    return false;
 
-                    //Check if IK is within min range and within dot product range
-                    if (dist > Sqr(Config.GetValue(MinCullingRange)) && MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < Config.GetValue(Fov)) return false;
+                    //Checks if IK is within min range and in view
+                    if (dist > Sqr(Config.GetValue(MinCullingRange)) &&
+                    MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < 
+                    MathX.Cos(0.01745329 * (Config.GetValue(FOV) * 0.5f))) 
+                    return false;
 
                     return true;
                 }
