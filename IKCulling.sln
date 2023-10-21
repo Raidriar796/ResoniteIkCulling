@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31424.327
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IKCulling", "IKCulling\IKCulling.csproj", "{33E73217-CC81-4B89-9313-BF50DD67E491}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResoniteIKCulling", "IKCulling\ResoniteIKCulling.csproj", "{33E73217-CC81-4B89-9313-BF50DD67E491}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
