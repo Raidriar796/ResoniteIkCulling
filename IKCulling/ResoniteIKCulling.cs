@@ -31,12 +31,6 @@ namespace IkCulling
                 "Disable IK without an active user.",
                 () => true);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<int> MinUserCount =
-            new ModConfigurationKey<int>(
-                "MinUserCount",
-                "Minimum amount of active users in the world to enable culling.",
-                () => 3);
-
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> UseUserScale =
             new ModConfigurationKey<bool>(
                 "UseUserScale",
@@ -53,23 +47,29 @@ namespace IkCulling
             new ModConfigurationKey<float>(
                 "FOV",
                 "Field of view used for culling, ranging from 0 degrees to 360 degrees.",
-                () => 110.0f, false, v => v <= 360.0f && v >= 0.0f);
+                () => 110f, false, v => v <= 360f && v >= 0f);
+
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<int> MinUserCount =
+            new ModConfigurationKey<int>(
+                "MinUserCount",
+                "Minimum amount of active users in the world to enable culling.",
+                () => 3);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> MinCullingRange =
             new ModConfigurationKey<float>(
                 "MinCullingRange",
                 "Minimum range for IK to always be enabled, useful for mirrors.",
-                () => 4);
+                () => 4f);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> MaxViewRange =
             new ModConfigurationKey<float>(
                 "MaxViewRange",
                 "Maximum range before fully disabling IK.",
-                () => 30);
+                () => 30f);
 
         public override string Name => "ResoniteIkCulling";
         public override string Author => "Raidriar796 & KyuubiYoru";
-        public override string Version => "2.2.0";
+        public override string Version => "2.2.1";
         public override string Link => "https://github.com/Raidriar796/ResoniteIkCulling";
 
         public override void OnEngineInit()
@@ -105,16 +105,16 @@ namespace IkCulling
             {
                 try
                 {
-                    //IkCulling is Disabled
+                    //IkCulling is disabled
                     if (!Config.GetValue(Enabled)) return true;
 
                     //User is Headless
                     if (__instance.LocalUser.HeadDevice == HeadOutputDevice.Headless) return false;
 
-                    //Always Update local Ik
-                    if (__instance.IsUnderLocalUser) return true;
+                    //Always update local Ik
+                    if (__instance.IsUnderLocalUser && __instance.IsEquipped) return true;
 
-                    //Ik is Disabled
+                    //Ik is disabled
                     if (!__instance.Enabled) return false;
 
                     //Users not present
