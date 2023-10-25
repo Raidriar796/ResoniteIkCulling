@@ -9,6 +9,9 @@ using ResoniteModLoader;
 
 namespace IkCulling
 {
+    //Populated to every IK in dictionary.
+    //We probably didn't need to do this, but in the event
+    //that more variables per IK are needed, this is here.
     public class Variables
     {
         public int UpdateIndex = 1;
@@ -87,7 +90,7 @@ namespace IkCulling
 
         public override string Name => "ResoniteIkCulling";
         public override string Author => "Raidriar796 & KyuubiYoru";
-        public override string Version => "2.3.0";
+        public override string Version => "2.3.1";
         public override string Link => "https://github.com/Raidriar796/ResoniteIkCulling";
 
         public override void OnEngineInit()
@@ -109,9 +112,6 @@ namespace IkCulling
             }
         }
 
-        public static float Sqr(float num) {
-            return (num * num);
-        }
 
         static Dictionary<VRIKAvatar, Variables> vrikList = new Dictionary<VRIKAvatar, Variables>();
 
@@ -119,10 +119,12 @@ namespace IkCulling
         [HarmonyPostfix]
         private static void AddToList(VRIKAvatar __instance)
         {
+            //Adds IK to list as new instances appear
             if (!vrikList.ContainsKey(__instance)) {
                 vrikList.Add(__instance, new Variables());
             }
 
+            //Searches and removes all null IK in dictionary whenever an IK is added
             foreach (var item in vrikList)
             {
                 if (item.Key == null) vrikList.Remove(item.Key);
@@ -141,15 +143,15 @@ namespace IkCulling
                 {
                     //IkCulling is disabled
                     if (!Config.GetValue(Enabled)) return true;
+                    
+                    //Ik is disabled
+                    if (!__instance.Enabled) return false;
 
                     //User is Headless
                     if (__instance.LocalUser.HeadDevice == HeadOutputDevice.Headless) return false;
 
                     //Always update local Ik
                     if (__instance.IsUnderLocalUser && __instance.IsEquipped) return true;
-
-                    //Ik is disabled
-                    if (!__instance.Enabled) return false;
                     
                     //Too few users
                     if (__instance.Slot.World.ActiveUserCount < Config.GetValue(MinUserCount)) return true;
@@ -168,26 +170,27 @@ namespace IkCulling
                     float dist = MathX.DistanceSqr(playerPos, ikPos);
 
                     //Include user scale in calculation
-                    if (Config.GetValue(UseUserScale)) dist = dist / Sqr(__instance.LocalUserRoot.GlobalScale);
+                    if (Config.GetValue(UseUserScale)) dist = dist / MathX.Pow(__instance.LocalUserRoot.GlobalScale, 2f);
 
                     //Include other user's scale in calculation
                     if (Config.GetValue(UseOtherUserScale))
                         if (__instance.Slot.ActiveUser != null)
-                            dist = dist / Sqr(__instance.Slot.ActiveUser.Root.GlobalScale);
+                            dist = dist / MathX.Pow(__instance.Slot.ActiveUser.Root.GlobalScale, 2f);
 
                     //Check if IK is outside of max range
-                    if (dist > Sqr(Config.GetValue(MaxViewRange))) 
+                    if (dist > MathX.Pow(Config.GetValue(MaxViewRange), 2f)) 
                     return false;
 
                     //Checks if IK is within min range and in view
-                    if (dist > Sqr(Config.GetValue(MinCullingRange)) &&
+                    if (dist > MathX.Pow(Config.GetValue(MinCullingRange), 2f) &&
                     MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < 
                     MathX.Cos(0.01745329 * (Config.GetValue(FOV) * 0.5f))) 
                     return false;
 
+                    //IK throttling
                     if ((Config.GetValue(IkUpdateFalloff) || Config.GetValue(HalfRateIkUpdates)) && __instance.Slot.ActiveUser != __instance.LocalUser) {
 
-                        // If not part part of list we add it
+                        //Adds an IK instance to the list if it's not already
                         if (!vrikList.ContainsKey(__instance))
                         {
                             vrikList.Add(__instance, new Variables());
@@ -197,54 +200,58 @@ namespace IkCulling
                         int skipCount = 1;
                         Variables current = vrikList[__instance];
 
+                        //Update skips for falloff
                         if (Config.GetValue(IkUpdateFalloff) && !Config.GetValue(HalfRateIkUpdates)) {
-                            if (dist > Sqr(Config.GetValue(MaxViewRange) * 0.9f))
+                            if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.9f, 2f))
                             {
                                 skipCount = 6;
                             }
-                            else if (dist > Sqr(Config.GetValue(MaxViewRange) * 0.8f))
+                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.8f, 2f))
                             {
                                 skipCount = 5;
                             }
-                            else if (dist > Sqr(Config.GetValue(MaxViewRange) * 0.7f))
+                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.7f, 2f))
                             {
                                 skipCount = 4;
                             }
-                            else if (dist > Sqr(Config.GetValue(MaxViewRange) * 0.6f))
+                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.6f, 2f))
                             {
                                 skipCount = 3;
                             }
-                            else if (dist > Sqr(Config.GetValue(MaxViewRange) * 0.5f))
+                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.5f, 2f))
                             {
                                 skipCount = 2;
                             }
                         }
+                        //Update skips for falloff + halfrate
                         else if (Config.GetValue(IkUpdateFalloff) && Config.GetValue(HalfRateIkUpdates)) {
                             skipCount = 2;
 
-                            if (dist > Sqr(Config.GetValue(MaxViewRange) * 0.9f))
+                            if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.9f, 2f))
                             {
                                 skipCount = 12;
                             }
-                            else if (dist > Sqr(Config.GetValue(MaxViewRange) * 0.8f))
+                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.8f, 2f))
                             {
                                 skipCount = 10;
                             }
-                            else if (dist > Sqr(Config.GetValue(MaxViewRange) * 0.7f))
+                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.7f, 2f))
                             {
                                 skipCount = 8;
                             }
-                            else if (dist > Sqr(Config.GetValue(MaxViewRange) * 0.6f))
+                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.6f, 2f))
                             {
                                 skipCount = 6;
                             }
-                            else if (dist > Sqr(Config.GetValue(MaxViewRange) * 0.5f))
+                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.5f, 2f))
                             {
                                 skipCount = 4;
                             }
                         }
+                        //Update skips for halfrate
                         else if (!Config.GetValue(IkUpdateFalloff) && Config.GetValue(HalfRateIkUpdates)) skipCount = 2;
 
+                        //The part that actually skips updates
                         if (vrikList[__instance].UpdateIndex > skipCount) vrikList[__instance].UpdateIndex = 1;
                         if (vrikList[__instance].UpdateIndex == skipCount)
                         {
