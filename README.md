@@ -1,6 +1,6 @@
 # ResoniteIkCulling
 
-A [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader) mod for [Resonite](https://resonite.com/) that disables the IK of Users who are behind you or far away.
+A [ResoniteModLoader](https://github.com/resonite-modding-group/ResoniteModLoader) mod for [Resonite](https://resonite.com/) that disables the IK of Users who are behind you or far away. Includes optional IK throttling.
 
 
 ## Installation

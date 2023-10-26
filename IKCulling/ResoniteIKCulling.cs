@@ -90,7 +90,7 @@ namespace IkCulling
 
         public override string Name => "ResoniteIkCulling";
         public override string Author => "Raidriar796 & KyuubiYoru";
-        public override string Version => "2.3.1";
+        public override string Version => "2.3.2";
         public override string Link => "https://github.com/Raidriar796/ResoniteIkCulling";
 
         public override void OnEngineInit()
@@ -110,8 +110,30 @@ namespace IkCulling
                 Error(e.ToString());
                 throw;
             }
+
+            //Calling the methods on start instead of declaring the
+            //variables with method calls because rml doesn't like that
+            UpdateFOV();
+            UpdateMaxRange();
+
+            //Sets up variables to avoid needless calculations per frame
+            FOV.OnChanged += (value) => { UpdateFOV(); };
+            MaxViewRange.OnChanged += (value) => { UpdateMaxRange(); };
+        }
+        
+        public static float FOVDegToDot = 0;
+
+        public static float MaxViewRangeSqr = 0;
+
+        public static void UpdateFOV()
+        {
+            FOVDegToDot = MathX.Cos(0.01745329f * (Config.GetValue(FOV) * 0.5f));
         }
 
+        public static void UpdateMaxRange()
+        {   
+            MaxViewRangeSqr = MathX.Pow(Config.GetValue(MaxViewRange), 2f);
+        }
 
         static Dictionary<VRIKAvatar, Variables> vrikList = new Dictionary<VRIKAvatar, Variables>();
 
@@ -134,7 +156,6 @@ namespace IkCulling
         [HarmonyPatch(typeof(VRIKAvatar))]
         public class IkCullingPatch
         {
-
             [HarmonyPrefix]
             [HarmonyPatch("OnCommonUpdate")]
             private static bool OnCommonUpdatePrefix(VRIKAvatar __instance)
@@ -170,25 +191,24 @@ namespace IkCulling
                     float dist = MathX.DistanceSqr(playerPos, ikPos);
 
                     //Include user scale in calculation
-                    if (Config.GetValue(UseUserScale)) dist = dist / MathX.Pow(__instance.LocalUserRoot.GlobalScale, 2f);
+                    if (Config.GetValue(UseUserScale)) 
+                        dist /= MathX.Pow(__instance.LocalUserRoot.GlobalScale, 2f);
 
                     //Include other user's scale in calculation
-                    if (Config.GetValue(UseOtherUserScale))
-                        if (__instance.Slot.ActiveUser != null)
-                            dist = dist / MathX.Pow(__instance.Slot.ActiveUser.Root.GlobalScale, 2f);
+                    if (Config.GetValue(UseOtherUserScale) && __instance.Slot.ActiveUser != null)
+                        dist /= MathX.Pow(__instance.Slot.ActiveUser.Root.GlobalScale, 2f);
 
                     //Check if IK is outside of max range
-                    if (dist > MathX.Pow(Config.GetValue(MaxViewRange), 2f)) 
+                    if (dist > MaxViewRangeSqr) 
                     return false;
 
                     //Checks if IK is within min range and in view
                     if (dist > MathX.Pow(Config.GetValue(MinCullingRange), 2f) &&
-                    MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < 
-                    MathX.Cos(0.01745329 * (Config.GetValue(FOV) * 0.5f))) 
+                    MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < FOVDegToDot) 
                     return false;
 
                     //IK throttling
-                    if ((Config.GetValue(IkUpdateFalloff) || Config.GetValue(HalfRateIkUpdates)) && __instance.Slot.ActiveUser != __instance.LocalUser) {
+                    if (Config.GetValue(IkUpdateFalloff) || Config.GetValue(HalfRateIkUpdates) && __instance.Slot.ActiveUser != __instance.LocalUser) {
 
                         //Adds an IK instance to the list if it's not already
                         if (!vrikList.ContainsKey(__instance))
@@ -200,25 +220,27 @@ namespace IkCulling
                         int skipCount = 1;
                         Variables current = vrikList[__instance];
 
+                        //Update skips for halfrate
+                        if (!Config.GetValue(IkUpdateFalloff) && Config.GetValue(HalfRateIkUpdates)) skipCount = 2;
                         //Update skips for falloff
-                        if (Config.GetValue(IkUpdateFalloff) && !Config.GetValue(HalfRateIkUpdates)) {
-                            if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.9f, 2f))
+                        else if (Config.GetValue(IkUpdateFalloff) && !Config.GetValue(HalfRateIkUpdates)) {
+                            if (dist > MaxViewRangeSqr * 0.81f)
                             {
                                 skipCount = 6;
                             }
-                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.8f, 2f))
+                            else if (dist > MaxViewRangeSqr * 0.64f)
                             {
                                 skipCount = 5;
                             }
-                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.7f, 2f))
+                            else if (dist > MaxViewRangeSqr * 0.49f)
                             {
                                 skipCount = 4;
                             }
-                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.6f, 2f))
+                            else if (dist > MaxViewRangeSqr * 0.36f)
                             {
                                 skipCount = 3;
                             }
-                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.5f, 2f))
+                            else if (dist > MaxViewRangeSqr * 0.25f)
                             {
                                 skipCount = 2;
                             }
@@ -227,29 +249,28 @@ namespace IkCulling
                         else if (Config.GetValue(IkUpdateFalloff) && Config.GetValue(HalfRateIkUpdates)) {
                             skipCount = 2;
 
-                            if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.9f, 2f))
+                            if (dist > MaxViewRangeSqr * 0.81f)
                             {
                                 skipCount = 12;
                             }
-                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.8f, 2f))
+                            else if (dist > MaxViewRangeSqr * 0.64f)
                             {
                                 skipCount = 10;
                             }
-                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.7f, 2f))
+                            else if (dist > MaxViewRangeSqr * 0.49f)
                             {
                                 skipCount = 8;
                             }
-                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.6f, 2f))
+                            else if (dist > MaxViewRangeSqr * 0.36f)
                             {
                                 skipCount = 6;
                             }
-                            else if (dist > MathX.Pow(Config.GetValue(MaxViewRange) * 0.5f, 2f))
+                            else if (dist > MaxViewRangeSqr * 0.25f)
                             {
                                 skipCount = 4;
                             }
                         }
-                        //Update skips for halfrate
-                        else if (!Config.GetValue(IkUpdateFalloff) && Config.GetValue(HalfRateIkUpdates)) skipCount = 2;
+                        
 
                         //The part that actually skips updates
                         if (vrikList[__instance].UpdateIndex > skipCount) vrikList[__instance].UpdateIndex = 1;
@@ -305,8 +326,6 @@ namespace IkCulling
                 CalibratorForceIkAutoUpdate(__instance);
             }
             
-        }
-
-        
+        }    
     }
 }
