@@ -220,10 +220,9 @@ namespace IkCulling
                         int skipCount = 1;
                         Variables current = vrikList[__instance];
 
-                        //Update skips for halfrate
-                        if (!Config.GetValue(IkUpdateFalloff) && Config.GetValue(HalfRateIkUpdates)) skipCount = 2;
                         //Update skips for falloff
-                        else if (Config.GetValue(IkUpdateFalloff) && !Config.GetValue(HalfRateIkUpdates)) {
+                        if (Config.GetValue(IkUpdateFalloff)) 
+                        {
                             if (dist > MaxViewRangeSqr * 0.81f)
                             {
                                 skipCount = 6;
@@ -245,31 +244,10 @@ namespace IkCulling
                                 skipCount = 2;
                             }
                         }
+                        //Update skips for halfrate
+                        else if (Config.GetValue(HalfRateIkUpdates)) skipCount = 2;
                         //Update skips for falloff + halfrate
-                        else if (Config.GetValue(IkUpdateFalloff) && Config.GetValue(HalfRateIkUpdates)) {
-                            skipCount = 2;
-
-                            if (dist > MaxViewRangeSqr * 0.81f)
-                            {
-                                skipCount = 12;
-                            }
-                            else if (dist > MaxViewRangeSqr * 0.64f)
-                            {
-                                skipCount = 10;
-                            }
-                            else if (dist > MaxViewRangeSqr * 0.49f)
-                            {
-                                skipCount = 8;
-                            }
-                            else if (dist > MaxViewRangeSqr * 0.36f)
-                            {
-                                skipCount = 6;
-                            }
-                            else if (dist > MaxViewRangeSqr * 0.25f)
-                            {
-                                skipCount = 4;
-                            }
-                        }
+                        if (Config.GetValue(HalfRateIkUpdates) && Config.GetValue(IkUpdateFalloff)) skipCount *= 2;
                         
 
                         //The part that actually skips updates
