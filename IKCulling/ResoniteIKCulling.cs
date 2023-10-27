@@ -114,20 +114,29 @@ namespace IkCulling
             //Calling the methods on start instead of declaring the
             //variables with method calls because rml doesn't like that
             UpdateFOV();
+            UpdateMinRange();
             UpdateMaxRange();
 
             //Sets up variables to avoid needless calculations per frame
             FOV.OnChanged += (value) => { UpdateFOV(); };
+            MinCullingRange.OnChanged += (value) => { UpdateMinRange(); };
             MaxViewRange.OnChanged += (value) => { UpdateMaxRange(); };
         }
         
         public static float FOVDegToDot = 0;
+
+        public static float MinCullingRangeSqr = 0;
 
         public static float MaxViewRangeSqr = 0;
 
         public static void UpdateFOV()
         {
             FOVDegToDot = MathX.Cos(0.01745329f * (Config.GetValue(FOV) * 0.5f));
+        }
+
+        public static void UpdateMinRange()
+        {   
+            MinCullingRangeSqr = MathX.Pow(Config.GetValue(MinCullingRange), 2f);
         }
 
         public static void UpdateMaxRange()
@@ -203,7 +212,7 @@ namespace IkCulling
                     return false;
 
                     //Checks if IK is within min range and in view
-                    if (dist > MathX.Pow(Config.GetValue(MinCullingRange), 2f) &&
+                    if (dist > MinCullingRangeSqr &&
                     MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < FOVDegToDot) 
                     return false;
 
