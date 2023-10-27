@@ -57,11 +57,11 @@ namespace IkCulling
                 "Reduce IK updates as they approach maximum range.",
                 () => false);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> HalfRateIkUpdates =
-            new ModConfigurationKey<bool>(
-                "HalfRateIkUpdates",
-                "Cut IK updates in half.",
-                () => false);
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<IkUpdateRate> UpdateRate =
+            new ModConfigurationKey<IkUpdateRate>(
+                "UpdateRate",
+                "Update rate for IK.",
+                () => IkUpdateRate.Full);
 
         [Range(0f, 360f)]
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> FOV = 
@@ -90,7 +90,7 @@ namespace IkCulling
 
         public override string Name => "ResoniteIkCulling";
         public override string Author => "Raidriar796 & KyuubiYoru";
-        public override string Version => "2.3.2";
+        public override string Version => "2.3.3";
         public override string Link => "https://github.com/Raidriar796/ResoniteIkCulling";
 
         public override void OnEngineInit()
@@ -142,6 +142,14 @@ namespace IkCulling
         public static void UpdateMaxRange()
         {   
             MaxViewRangeSqr = MathX.Pow(Config.GetValue(MaxViewRange), 2f);
+        }
+
+        public enum IkUpdateRate
+        {
+            Full,
+            Half,
+            Quarter,
+            Eighth
         }
 
         static Dictionary<VRIKAvatar, Variables> vrikList = new Dictionary<VRIKAvatar, Variables>();
@@ -217,7 +225,7 @@ namespace IkCulling
                     return false;
 
                     //IK throttling
-                    if (Config.GetValue(IkUpdateFalloff) || Config.GetValue(HalfRateIkUpdates) && __instance.Slot.ActiveUser != __instance.LocalUser) {
+                    if (Config.GetValue(IkUpdateFalloff) || (Config.GetValue(UpdateRate) != IkUpdateRate.Full) && __instance.Slot.ActiveUser != __instance.LocalUser) {
 
                         //Adds an IK instance to the list if it's not already
                         if (!vrikList.ContainsKey(__instance))
@@ -253,10 +261,49 @@ namespace IkCulling
                                 skipCount = 2;
                             }
                         }
-                        //Update skips for halfrate
-                        else if (Config.GetValue(HalfRateIkUpdates)) skipCount = 2;
-                        //Update skips for falloff + halfrate
-                        if (Config.GetValue(HalfRateIkUpdates) && Config.GetValue(IkUpdateFalloff)) skipCount *= 2;
+
+                        //Update skips lower update rate
+                        else switch (Config.GetValue(UpdateRate))
+                        {
+                            case IkUpdateRate.Half:
+                            skipCount = 2;
+                            break;
+                            
+                            case IkUpdateRate.Quarter:
+                            skipCount = 4;
+                            break;
+
+                            case IkUpdateRate.Eighth:
+                            skipCount = 8;
+                            break;
+
+                            default:
+                            skipCount = 1;
+                            break;
+                        }
+
+                        //Update skips for falloff + lower update rate
+                        if (Config.GetValue(UpdateRate) != IkUpdateRate.Full && Config.GetValue(IkUpdateFalloff))
+                        {
+                            switch (Config.GetValue(UpdateRate))
+                            {
+                                case IkUpdateRate.Half:
+                                skipCount *= 2;
+                                break;
+                                
+                                case IkUpdateRate.Quarter:
+                                skipCount *= 4;
+                                break;
+
+                                case IkUpdateRate.Eighth:
+                                skipCount *= 8;
+                                break;
+
+                                default:
+                                skipCount = 1;
+                                break;
+                            }
+                        }
                         
 
                         //The part that actually skips updates
