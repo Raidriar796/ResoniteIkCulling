@@ -50,18 +50,19 @@ namespace IkCulling
                 "UseOtherUserScale",
                 "Use other user's scale for distance checks.",
                 () => false);
-                
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> IkUpdateFalloff =
-            new ModConfigurationKey<bool>(
-                "IkUpdateFalloff",
-                "Reduce IK updates as they approach maximum range.",
-                () => false);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<IkUpdateRate> UpdateRate =
             new ModConfigurationKey<IkUpdateRate>(
                 "UpdateRate",
                 "Update rate for IK.",
                 () => IkUpdateRate.Full);
+
+        [Range(0, 100)]
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<int> IkUpdateFalloff =
+            new ModConfigurationKey<int>(
+                "IkUpdateFalloff",
+                "Reduce IK updates as they get further away, threshold is 0% to 100% relative to Max Range.",
+                () => 100, false, v => v <= 100 && v >= 0);
 
         [Range(0f, 360f)]
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> FOV = 
@@ -90,7 +91,7 @@ namespace IkCulling
 
         public override string Name => "ResoniteIkCulling";
         public override string Author => "Raidriar796 & KyuubiYoru";
-        public override string Version => "2.3.3";
+        public override string Version => "2.4.0";
         public override string Link => "https://github.com/Raidriar796/ResoniteIkCulling";
 
         public override void OnEngineInit()
@@ -116,33 +117,70 @@ namespace IkCulling
             UpdateFOV();
             UpdateMinRange();
             UpdateMaxRange();
+            UpdateFalloff();
 
-            //Sets up variables to avoid needless calculations per frame
+            //Sets up variables to avoid redundant calculations per ik per frame
             FOV.OnChanged += (value) => { UpdateFOV(); };
             MinCullingRange.OnChanged += (value) => { UpdateMinRange(); };
             MaxViewRange.OnChanged += (value) => { UpdateMaxRange(); };
+            IkUpdateFalloff.OnChanged += (value) => { UpdateFalloff(); };
         }
         
-        public static float FOVDegToDot = 0;
-
-        public static float MinCullingRangeSqr = 0;
-
-        public static float MaxViewRangeSqr = 0;
+        public static float FOVDegToDot = 0f;
 
         public static void UpdateFOV()
         {
             FOVDegToDot = MathX.Cos(0.01745329f * (Config.GetValue(FOV) * 0.5f));
         }
 
+
+        public static float MinCullingRangeSqr = 0f;
+
         public static void UpdateMinRange()
         {   
             MinCullingRangeSqr = MathX.Pow(Config.GetValue(MinCullingRange), 2f);
         }
+        
+
+        public static float MaxViewRangeSqr = 0f;
 
         public static void UpdateMaxRange()
         {   
             MaxViewRangeSqr = MathX.Pow(Config.GetValue(MaxViewRange), 2f);
         }
+
+
+        public static float PercentAsFloat = 0f;
+
+        public static float Threshold = 0f;
+
+        public static float FalloffStep1 = 0f;
+
+        public static float FalloffStep2 = 0f;
+
+        public static float FalloffStep3 = 0f;
+
+        public static float FalloffStep4 = 0f;
+
+        public static float FalloffStep5 = 0f;
+
+        public static void UpdateFalloff()
+        {
+            PercentAsFloat = Config.GetValue(IkUpdateFalloff) * 0.01f;
+
+            Threshold = MathX.Lerp(0f, Config.GetValue(MaxViewRange), PercentAsFloat);
+
+            FalloffStep1 = MathX.Pow(Threshold, 2f);
+
+            FalloffStep2 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.2f), 2f);
+
+            FalloffStep3 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.4f), 2f);
+            
+            FalloffStep4 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.6f), 2f);
+
+            FalloffStep5 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.8f), 2f);
+        }
+
 
         public enum IkUpdateRate
         {
@@ -151,6 +189,7 @@ namespace IkCulling
             Quarter,
             Eighth
         }
+
 
         static Dictionary<VRIKAvatar, Variables> vrikList = new Dictionary<VRIKAvatar, Variables>();
 
@@ -169,6 +208,7 @@ namespace IkCulling
                 if (item.Key == null) vrikList.Remove(item.Key);
             }
         }
+
         
         [HarmonyPatch(typeof(VRIKAvatar))]
         public class IkCullingPatch
@@ -225,7 +265,7 @@ namespace IkCulling
                     return false;
 
                     //IK throttling
-                    if (Config.GetValue(IkUpdateFalloff) || (Config.GetValue(UpdateRate) != IkUpdateRate.Full) && __instance.Slot.ActiveUser != __instance.LocalUser) {
+                    if ((Config.GetValue(IkUpdateFalloff) < 100) || (Config.GetValue(UpdateRate) != IkUpdateRate.Full) && __instance.Slot.ActiveUser != __instance.LocalUser) {
 
                         //Adds an IK instance to the list if it's not already
                         if (!vrikList.ContainsKey(__instance))
@@ -238,25 +278,25 @@ namespace IkCulling
                         Variables current = vrikList[__instance];
 
                         //Update skips for falloff
-                        if (Config.GetValue(IkUpdateFalloff)) 
+                        if (Config.GetValue(IkUpdateFalloff) < 100) 
                         {
-                            if (dist > MaxViewRangeSqr * 0.81f)
+                            if (dist > FalloffStep5)
                             {
                                 skipCount = 6;
                             }
-                            else if (dist > MaxViewRangeSqr * 0.64f)
+                            else if (dist > FalloffStep4)
                             {
                                 skipCount = 5;
                             }
-                            else if (dist > MaxViewRangeSqr * 0.49f)
+                            else if (dist > FalloffStep3)
                             {
                                 skipCount = 4;
                             }
-                            else if (dist > MaxViewRangeSqr * 0.36f)
+                            else if (dist > FalloffStep2)
                             {
                                 skipCount = 3;
                             }
-                            else if (dist > MaxViewRangeSqr * 0.25f)
+                            else if (dist > FalloffStep1)
                             {
                                 skipCount = 2;
                             }
@@ -283,7 +323,7 @@ namespace IkCulling
                         }
 
                         //Update skips for falloff + lower update rate
-                        if (Config.GetValue(UpdateRate) != IkUpdateRate.Full && Config.GetValue(IkUpdateFalloff))
+                        if (Config.GetValue(UpdateRate) != IkUpdateRate.Full && (Config.GetValue(IkUpdateFalloff) < 100))
                         {
                             switch (Config.GetValue(UpdateRate))
                             {
