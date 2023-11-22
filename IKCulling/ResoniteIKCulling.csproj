@@ -5,7 +5,12 @@
         <AppDesignerFolder>Properties</AppDesignerFolder>
         <RootNamespace>ResoniteIKCulling</RootNamespace>
         <AssemblyTitle>ResoniteIKCulling</AssemblyTitle>
-        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <Authors>Raidriar796</Authors>
+        <Copyright>Copyright © 2023 Raidriar796</Copyright>
+        <Version>2.5.0</Version>
+        <AssemblyVersion>2.5.0.0</AssemblyVersion>
+        <FileVersion>2.5.0.0</FileVersion>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <TargetFramework>net472</TargetFramework>
         <FileAlignment>512</FileAlignment>
         <LangVersion>latest</LangVersion>
@@ -17,6 +22,7 @@
     <PropertyGroup Condition="'$(ResonitePath)'==''">
         <ResonitePath Condition="Exists('C:\Program Files (x86)\Steam\steamapps\common\Resonite\')">C:\Program Files (x86)\Steam\steamapps\common\Resonite\</ResonitePath>
     </PropertyGroup>
+
     <ItemGroup>
         <Reference Include="ResoniteModLoader">
             <HintPath>$(ResonitePath)Libraries\ResoniteModLoader.dll</HintPath>
@@ -35,12 +41,12 @@
             <HintPath>$(ResonitePath)Resonite_Data\Managed\Elements.Core.dll</HintPath>
             <Private>False</Private>
         </Reference>
-        <Reference Include="UnityEngine">
-            <HintPath>$(ResonitePath)Resonite_Data\Managed\UnityEngine.dll</HintPath>
+        <Reference Include="SteamVR">
+            <HintPath>$(ResonitePath)Resonite_Data\Managed\SteamVR.dll</HintPath>
             <Private>False</Private>
         </Reference>
-        <Reference Include="UnityFrooxEngineRunner">
-            <HintPath>$(ResonitePath)Resonite_Data\Managed\UnityFrooxEngineRunner.dll</HintPath>
+        <Reference Include="UnityEngine.CoreModule">
+            <HintPath>$(ResonitePath)Resonite_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
             <Private>False</Private>
         </Reference>
     </ItemGroup>

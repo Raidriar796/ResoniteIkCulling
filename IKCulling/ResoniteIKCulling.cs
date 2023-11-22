@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Elements.Core;
 using FrooxEngine;
 using FrooxEngine.FinalIK;
 using HarmonyLib;
 using ResoniteModLoader;
+using UnityEngine;
 
 namespace IkCulling
 {
@@ -39,6 +39,12 @@ namespace IkCulling
                 "Disable IK without an active user.",
                 () => true);
 
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> DisableOnInactiveUser =
+            new ModConfigurationKey<bool>(
+                "DisableOnInactiveUser",
+                "Disable all IK if the SteamVR/Oculus dash is open or the window is not focused on desktop mode.",
+                () => true);
+
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> UseUserScale =
             new ModConfigurationKey<bool>(
                 "UseUserScale",
@@ -57,14 +63,14 @@ namespace IkCulling
                 "Update rate for IK.",
                 () => IkUpdateRate.Full);
 
-        [Range(0, 100)]
+        [FrooxEngine.Range(0, 100)]
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<int> IkUpdateFalloff =
             new ModConfigurationKey<int>(
                 "IkUpdateFalloff",
                 "Reduce IK updates as they get further away, threshold is 0% to 100% relative to Max Range.",
                 () => 100, false, v => v <= 100 && v >= 0);
 
-        [Range(0f, 360f)]
+        [FrooxEngine.Range(0f, 360f)]
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> FOV = 
             new ModConfigurationKey<float>(
                 "FOV",
@@ -91,14 +97,14 @@ namespace IkCulling
 
         public override string Name => "ResoniteIkCulling";
         public override string Author => "Raidriar796 & KyuubiYoru";
-        public override string Version => "2.4.0";
+        public override string Version => "2.5.0";
         public override string Link => "https://github.com/Raidriar796/ResoniteIkCulling";
 
         public override void OnEngineInit()
         {
             try
             {
-                Harmony harmony = new Harmony("net.Raidriar796.ResoniteIkCulling");
+                Harmony harmony = new Harmony("net.raidriar796.ResoniteIkCulling");
                 harmony.PatchAll();
 
                 Config = GetConfiguration();
@@ -227,6 +233,15 @@ namespace IkCulling
 
                     //User is Headless
                     if (__instance.LocalUser.HeadDevice == HeadOutputDevice.Headless) return false;
+
+                    //Platform dash is open or user is not focused on window
+                    if (Config.GetValue(DisableOnInactiveUser))
+                    {
+                        if (__instance.LocalUser.VR_Active &&
+                        __instance.LocalUser.IsPlatformDashOpened) return false;
+                        else if (!__instance.LocalUser.VR_Active &&
+                        !Application.isFocused) return false;
+                    }
 
                     //Always update local Ik
                     if (__instance.IsUnderLocalUser && __instance.IsEquipped) return true;
