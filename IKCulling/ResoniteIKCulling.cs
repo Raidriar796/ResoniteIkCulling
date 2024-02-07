@@ -9,14 +9,6 @@ using UnityEngine;
 
 namespace IkCulling
 {
-    //Populated to every IK in dictionary.
-    //We probably didn't need to do this, but in the event
-    //that more variables per IK are needed, this is here.
-    public class Variables
-    {
-        public int UpdateIndex = 1;
-    }
-
     public class IkCulling : ResoniteMod
     {
         public static ModConfiguration Config;
@@ -27,60 +19,32 @@ namespace IkCulling
                 "ResoniteIkCulling is Enabled.",
                 () => true);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> DisableAfkUser =
-            new ModConfigurationKey<bool>(
-                "DisableAfkUser",
-                "Disable IK of users not in the session.",
-                () => true);
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer1 =
+            new ModConfigurationKey<dummy>(
+                " ",
+                "");
+        
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer2 =
+            new ModConfigurationKey<dummy>(
+                "DummySpacer2",
+                "<b>Culling Behavior Options:</b>");
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> DisableIkWithoutUser =
-            new ModConfigurationKey<bool>(
-                "DisableIkWithoutUser",
-                "Disable IK without an active user.",
-                () => true);
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<ScaleCompType> ScaleComp =
+            new ModConfigurationKey<ScaleCompType>(
+                "ScaleComp",
+                "Type of scale compensation used for distance checks.",
+                () => ScaleCompType.None);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> DisableOnInactiveUser =
-            new ModConfigurationKey<bool>(
-                "DisableOnInactiveUser",
-                "Disable all IK if the SteamVR/Oculus dash is open or the window is not focused on desktop mode.",
-                () => true);
-
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> UseUserScale =
-            new ModConfigurationKey<bool>(
-                "UseUserScale",
-                "Use your scale for distance checks.",
-                () => false);
-
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> UseOtherUserScale =
-            new ModConfigurationKey<bool>(
-                "UseOtherUserScale",
-                "Use other user's scale for distance checks.",
-                () => false);
-
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<IkUpdateRate> UpdateRate =
-            new ModConfigurationKey<IkUpdateRate>(
-                "UpdateRate",
-                "Update rate for IK.",
-                () => IkUpdateRate.Full);
-
-        [FrooxEngine.Range(0, 100)]
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<int> IkUpdateFalloff =
-            new ModConfigurationKey<int>(
-                "IkUpdateFalloff",
-                "Reduce IK updates as they get further away, threshold is 0% to 100% relative to Max Range.",
-                () => 100, false, v => v <= 100 && v >= 0);
-
-        [FrooxEngine.Range(0f, 360f)]
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> FOV = 
-            new ModConfigurationKey<float>(
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float?> FOV = 
+            new ModConfigurationKey<float?>(
                 "FOV",
-                "Field of view used for culling, ranging from 0 degrees to 360 degrees.",
-                () => 110f, false, v => v <= 360f && v >= 0f);
+                "Enable to force specific culling FOV, automatic when disabled.",
+                () => null, false, v => v <= 100 && v >= 0 || v == null);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<int> MinUserCount =
-            new ModConfigurationKey<int>(
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<byte> MinUserCount =
+            new ModConfigurationKey<byte>(
                 "MinUserCount",
-                "Minimum amount of active users in the world to enable culling.",
+                "Minimum amount of users in the world to enable culling.",
                 () => 3);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> MinCullingRange =
@@ -95,9 +59,60 @@ namespace IkCulling
                 "Maximum range before fully disabling IK.",
                 () => 30f);
 
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer3 =
+            new ModConfigurationKey<dummy>(
+                "  ",
+                "");
+
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer4 =
+            new ModConfigurationKey<dummy>(
+                "DummySpacer4",
+                "<b>Extra Culling Options:</b>");
+
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> DisableAfkUser =
+            new ModConfigurationKey<bool>(
+                "DisableAfkUser",
+                "Disable IK of users not in the session.",
+                () => true);
+
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> DisableIkWithoutUser =
+            new ModConfigurationKey<bool>(
+                "DisableIkWithoutUser",
+                "Disable IK without an active user.",
+                () => true);
+
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> DisableOnDashboard =
+            new ModConfigurationKey<bool>(
+                "DisableOnInactiveUser",
+                "Disable IK if the SteamVR/Oculus dash is open or the window is not focused on desktop mode.",
+                () => true);
+
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer5 =
+            new ModConfigurationKey<dummy>(
+                "   ",
+                "");
+
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer6 =
+            new ModConfigurationKey<dummy>(
+                "DummySpacer6",
+                "<b>Throttling Options:</b>");
+
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<IkUpdateRate> UpdateRate =
+            new ModConfigurationKey<IkUpdateRate>(
+                "UpdateRate",
+                "Update rate for IK.",
+                () => IkUpdateRate.Full);
+
+        [FrooxEngine.Range(0, 100)]
+        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<byte> IkUpdateFalloff =
+            new ModConfigurationKey<byte>(
+                "IkUpdateFalloff",
+                "Reduce IK updates based on distance, threshold is 0 - 100% relative to Max Range.",
+                () => 50, false, v => v <= 100 && v >= 0);
+
         public override string Name => "ResoniteIkCulling";
         public override string Author => "Raidriar796 & KyuubiYoru";
-        public override string Version => "2.5.0";
+        public override string Version => "2.6.0";
         public override string Link => "https://github.com/Raidriar796/ResoniteIkCulling";
 
         public override void OnEngineInit()
@@ -118,57 +133,171 @@ namespace IkCulling
                 throw;
             }
 
-            //Calling the methods on start instead of declaring the
-            //variables with method calls because rml doesn't like that
-            UpdateFOV();
-            UpdateMinRange();
-            UpdateMaxRange();
-            UpdateFalloff();
+            
+            Engine.Current.RunPostInit(() =>
+            {
+                if (Engine.Current.SystemInfo.HeadDevice.IsVR())
+                {
+                    DiscoverHeadset();
+                }
+
+                //Calling the methods on start instead of declaring the
+                //variables with method calls because rml doesn't like that
+                UpdateFOV();
+                UpdateMinRange();
+                UpdateMaxRange();
+                UpdateFalloff();
+            });
 
             //Sets up variables to avoid redundant calculations per ik per frame
+            //by saving the result of calculations that infrequently change
             FOV.OnChanged += (value) => { UpdateFOV(); };
             MinCullingRange.OnChanged += (value) => { UpdateMinRange(); };
             MaxViewRange.OnChanged += (value) => { UpdateMaxRange(); };
             IkUpdateFalloff.OnChanged += (value) => { UpdateFalloff(); };
         }
-        
-        public static float FOVDegToDot = 0f;
+
+        //Variables
+        private static Headset UserHeadset = Headset.Unknown;
+        private static float FOVDegToDot = 0f;
+        private static float MinCullingRangeSqr = 0f;
+        private static float MaxViewRangeSqr = 0f;
+        private static float PercentAsFloat = 0f;
+        private static float Threshold = 0f;
+        private static float FalloffStep1 = 0f;
+        private static float FalloffStep2 = 0f;
+        private static float FalloffStep3 = 0f;
+        private static float FalloffStep4 = 0f;
+        private static float FalloffStep5 = 0f;
+        public enum ScaleCompType
+        {
+            None,
+            Relative,
+            YourUserScale,
+            OtherUserScale
+        }
+        //Value is exact or average FOV per headset(s)
+        public enum Headset : byte
+        {
+            Beyond = 102,
+            Index = 108,
+            Pico = 102,
+            Pimax = 150,
+            Quest = 101,
+            Reverb = 97,
+            Rift = 89,
+            Unknown = 100,
+            Vive = 103
+        }
+        public enum IkUpdateRate
+        {
+            Full,
+            Half,
+            Quarter,
+            Eighth
+        }
+        //Since this is retrieving hardware info instead of checking a known list,
+        //this instead checks common words headset info may return to guess
+        //what headset a user is using, until a better solution is found
+        public static void DiscoverHeadset()
+        {
+            string XRDeviceModel = Engine.Current.SystemInfo.XRDeviceModel;
+
+            if (XRDeviceModel.Contains("Beyond"))
+            {
+                UserHeadset = Headset.Beyond;
+            }
+            else if (XRDeviceModel.Contains("Index"))
+            {
+                UserHeadset = Headset.Index;
+            }
+            else if (XRDeviceModel.Contains("Pico"))
+            {
+                UserHeadset = Headset.Pico;
+            }
+            else if (XRDeviceModel.Contains("Pimax"))
+            {
+                UserHeadset = Headset.Pimax;
+            }
+            else if (XRDeviceModel.Contains("Quest"))
+            {
+                UserHeadset = Headset.Quest;
+            }
+            else if (XRDeviceModel.Contains("Reverb"))
+            {
+                UserHeadset = Headset.Reverb;
+            }
+            else if (XRDeviceModel.Contains("Rift"))
+            {
+                UserHeadset = Headset.Rift;
+            }
+            else if (XRDeviceModel.Contains("Vive"))
+            {
+                UserHeadset = Headset.Vive;
+            }
+        }
+
+        //Populated to every IK in dictionary.
+        //We probably didn't need to do this, but in the event
+        //that more variables per IK are needed, this is here.
+        public class Variables
+        {
+            public byte UpdateIndex = 1;
+        }
+
+        //Updates FOV when settings are fetched on startup
+        [HarmonyPatch(typeof(Settings))]
+        public class SettingsFetchPatch
+        {
+            [HarmonyPatch("GetSettings")]
+            private static void Postfix()
+            {
+                UpdateFOV();
+            }
+        }
+
+        //Updates FOV when settings are saved
+        [HarmonyPatch(typeof(SettingsDialog))]
+        public class SettingsSavePatch
+        {
+            [HarmonyPatch("OnSaveSettings")]
+            private static void Postfix()
+            {
+                UpdateFOV();
+            }
+        }
 
         public static void UpdateFOV()
         {
-            FOVDegToDot = MathX.Cos(0.01745329f * (Config.GetValue(FOV) * 0.5f));
+            if (!Config.GetValue(FOV).HasValue)
+            {
+                if (Engine.Current.SystemInfo.HeadDevice.IsVR())
+                {
+                    //Value assigned when in VR
+                    FOVDegToDot = MathX.Cos(MathX.Deg2Rad * (float)UserHeadset);
+                }
+                else
+                {
+                    //Value assigned when in desktop
+                    FOVDegToDot = MathX.Cos(MathX.Deg2Rad * Settings.ReadValue("Settings.Graphics.DesktopFOV", 60f));
+                }
+            }
+            else
+            {
+                //Value assigned when user manually specifies FOV
+                FOVDegToDot = MathX.Cos(MathX.Deg2Rad * Config.GetValue(FOV).Value);
+            }
         }
-
-
-        public static float MinCullingRangeSqr = 0f;
 
         public static void UpdateMinRange()
         {   
             MinCullingRangeSqr = MathX.Pow(Config.GetValue(MinCullingRange), 2f);
         }
-        
-
-        public static float MaxViewRangeSqr = 0f;
 
         public static void UpdateMaxRange()
         {   
             MaxViewRangeSqr = MathX.Pow(Config.GetValue(MaxViewRange), 2f);
         }
-
-
-        public static float PercentAsFloat = 0f;
-
-        public static float Threshold = 0f;
-
-        public static float FalloffStep1 = 0f;
-
-        public static float FalloffStep2 = 0f;
-
-        public static float FalloffStep3 = 0f;
-
-        public static float FalloffStep4 = 0f;
-
-        public static float FalloffStep5 = 0f;
 
         public static void UpdateFalloff()
         {
@@ -186,16 +315,6 @@ namespace IkCulling
 
             FalloffStep5 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.8f), 2f);
         }
-
-
-        public enum IkUpdateRate
-        {
-            Full,
-            Half,
-            Quarter,
-            Eighth
-        }
-
 
         static Dictionary<VRIKAvatar, Variables> vrikList = new Dictionary<VRIKAvatar, Variables>();
 
@@ -215,7 +334,6 @@ namespace IkCulling
             }
         }
 
-        
         [HarmonyPatch(typeof(VRIKAvatar))]
         public class IkCullingPatch
         {
@@ -223,166 +341,190 @@ namespace IkCulling
             [HarmonyPatch("OnCommonUpdate")]
             private static bool OnCommonUpdatePrefix(VRIKAvatar __instance)
             {
+                //IkCulling is disabled
+                if (!Config.GetValue(Enabled)) return true;
+                    
+                //Ik is disabled
+                if (!__instance.Enabled) return false;
+
+                //User is Headless
+                if (ModLoader.IsHeadless) return false;
+
+                //Always skip local Ik
+                if (__instance.IsUnderLocalUser && __instance.IsEquipped) return true;
+
+                //Too few users
+                if (__instance.Slot.World.UserCount < Config.GetValue(MinUserCount)) return true;
+
+                //Platform dash is open or user is not focused on window
+                if (Config.GetValue(DisableOnDashboard))
+                {
+                    if (__instance.LocalUser.VR_Active)
+                    {
+                        if (__instance.LocalUser.IsPlatformDashOpened) return false;
+                    }
+                    else
+                    {
+                        if (!Application.isFocused) return false;
+                    }
+                }
+                    
+                //No active user
+                if (Config.GetValue(DisableIkWithoutUser) && !__instance.IsEquipped) return false;
+
+                //Users not present
+                if (Config.GetValue(DisableAfkUser) && __instance.Slot.ActiveUser != null &&
+                    !__instance.Slot.ActiveUser.IsPresentInWorld) return false;
+
+                float3 playerPos = __instance.Slot.World.LocalUserViewPosition;
+                float3 ikPos = __instance.HeadProxy.GlobalPosition;
+
+                float dist = MathX.DistanceSqr(playerPos, ikPos);
+
+                float LocalUserScale = __instance.LocalUserRoot.GlobalScale;
+                float OtherUserScale = __instance.Slot.ActiveUser.Root.GlobalScale;
+
                 try
                 {
-                    //IkCulling is disabled
-                    if (!Config.GetValue(Enabled)) return true;
-                    
-                    //Ik is disabled
-                    if (!__instance.Enabled) return false;
-
-                    //User is Headless
-                    if (__instance.LocalUser.HeadDevice == HeadOutputDevice.Headless) return false;
-
-                    //Platform dash is open or user is not focused on window
-                    if (Config.GetValue(DisableOnInactiveUser))
+                    switch (Config.GetValue(ScaleComp))
                     {
-                        if (__instance.LocalUser.VR_Active &&
-                        __instance.LocalUser.IsPlatformDashOpened) return false;
-                        else if (!__instance.LocalUser.VR_Active &&
-                        !Application.isFocused) return false;
+                        case ScaleCompType.None:
+                        break;
+
+                        case ScaleCompType.Relative:
+                        dist /= LocalUserScale * LocalUserScale;
+                        if (__instance.IsEquipped)
+                        {
+                            dist /= OtherUserScale * OtherUserScale;
+                        }
+                        break;
+                                        
+                        case ScaleCompType.YourUserScale:
+                        dist /= LocalUserScale * LocalUserScale;
+                        break;
+
+                        case ScaleCompType.OtherUserScale:
+                        if (__instance.IsEquipped)
+                        {
+                            dist /= OtherUserScale * OtherUserScale;
+                        }
+                        break;
+
+                        default:
+                        break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Msg("Error in scale compensation");
+                    Error(e.Message);
+                    Error(e.StackTrace);
+                    return true;
+                }
+
+                //Checks if IK is within min range and in view
+                if (dist > MinCullingRangeSqr &&
+                MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < FOVDegToDot) 
+                return false;
+
+                //Check if IK is outside of max range
+                if (dist > MaxViewRangeSqr) 
+                return false;
+                    
+                //IK throttling
+                if ((Config.GetValue(IkUpdateFalloff) < 100) || 
+                (Config.GetValue(UpdateRate) != IkUpdateRate.Full))
+                {
+
+                    //Adds an IK instance to the list if it's not already
+                    if (!vrikList.ContainsKey(__instance))
+                    {
+                        vrikList.Add(__instance, new Variables());
+                        return true;
+                    }
+                    byte skipCount = 1;
+
+                    //Update skips for falloff
+                    if (Config.GetValue(IkUpdateFalloff) < 100) 
+                    {
+                        if (dist > FalloffStep5)
+                        {
+                            skipCount = 6;
+                        }
+                        else if (dist > FalloffStep4)
+                        {
+                            skipCount = 5;
+                        }
+                        else if (dist > FalloffStep3)
+                        {
+                            skipCount = 4;
+                        }
+                        else if (dist > FalloffStep2)
+                        {
+                            skipCount = 3;
+                        }
+                        else if (dist > FalloffStep1)
+                        {
+                            skipCount = 2;
+                        }
                     }
 
-                    //Always update local Ik
-                    if (__instance.IsUnderLocalUser && __instance.IsEquipped) return true;
-                    
-                    //Too few users
-                    if (__instance.Slot.World.ActiveUserCount < Config.GetValue(MinUserCount)) return true;
+                    //Update skips lower update rate
+                    else switch (Config.GetValue(UpdateRate))
+                    {
+                        case IkUpdateRate.Half:
+                        skipCount = 2;
+                        break;
+                                        
+                        case IkUpdateRate.Quarter:
+                        skipCount = 4;
+                        break;
 
-                    //Users not present
-                    if (__instance.Slot.ActiveUser != null && Config.GetValue(DisableAfkUser) &&
-                        !__instance.Slot.ActiveUser.IsPresentInWorld) return false;
+                        case IkUpdateRate.Eighth:
+                        skipCount = 8;
+                        break;
 
-                    //No active user
-                    if (Config.GetValue(DisableIkWithoutUser) && !__instance.IsEquipped) return false;
+                        default:
+                        skipCount = 1;
+                        break;
+                    }
 
-                    
-                    float3 playerPos = __instance.Slot.World.LocalUserViewPosition;
-                    float3 ikPos = __instance.HeadProxy.GlobalPosition;
-
-                    float dist = MathX.DistanceSqr(playerPos, ikPos);
-
-                    //Include user scale in calculation
-                    if (Config.GetValue(UseUserScale)) 
-                        dist /= MathX.Pow(__instance.LocalUserRoot.GlobalScale, 2f);
-
-                    //Include other user's scale in calculation
-                    if (Config.GetValue(UseOtherUserScale) && __instance.Slot.ActiveUser != null)
-                        dist /= MathX.Pow(__instance.Slot.ActiveUser.Root.GlobalScale, 2f);
-
-                    //Check if IK is outside of max range
-                    if (dist > MaxViewRangeSqr) 
-                    return false;
-
-                    //Checks if IK is within min range and in view
-                    if (dist > MinCullingRangeSqr &&
-                    MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < FOVDegToDot) 
-                    return false;
-
-                    //IK throttling
-                    if ((Config.GetValue(IkUpdateFalloff) < 100) || (Config.GetValue(UpdateRate) != IkUpdateRate.Full) && __instance.Slot.ActiveUser != __instance.LocalUser) {
-
-                        //Adds an IK instance to the list if it's not already
-                        if (!vrikList.ContainsKey(__instance))
-                        {
-                            vrikList.Add(__instance, new Variables());
-                            return true;
-                        }
-
-                        int skipCount = 1;
-                        Variables current = vrikList[__instance];
-
-                        //Update skips for falloff
-                        if (Config.GetValue(IkUpdateFalloff) < 100) 
-                        {
-                            if (dist > FalloffStep5)
-                            {
-                                skipCount = 6;
-                            }
-                            else if (dist > FalloffStep4)
-                            {
-                                skipCount = 5;
-                            }
-                            else if (dist > FalloffStep3)
-                            {
-                                skipCount = 4;
-                            }
-                            else if (dist > FalloffStep2)
-                            {
-                                skipCount = 3;
-                            }
-                            else if (dist > FalloffStep1)
-                            {
-                                skipCount = 2;
-                            }
-                        }
-
-                        //Update skips lower update rate
-                        else switch (Config.GetValue(UpdateRate))
+                    //Update skips for falloff + lower update rate
+                    if (Config.GetValue(UpdateRate) != IkUpdateRate.Full && (Config.GetValue(IkUpdateFalloff) < 100))
+                    {
+                        switch (Config.GetValue(UpdateRate))
                         {
                             case IkUpdateRate.Half:
-                            skipCount = 2;
+                            skipCount *= 2;
                             break;
-                            
+                                                
                             case IkUpdateRate.Quarter:
-                            skipCount = 4;
+                            skipCount *= 4;
                             break;
 
                             case IkUpdateRate.Eighth:
-                            skipCount = 8;
+                            skipCount *= 8;
                             break;
 
                             default:
                             skipCount = 1;
                             break;
                         }
-
-                        //Update skips for falloff + lower update rate
-                        if (Config.GetValue(UpdateRate) != IkUpdateRate.Full && (Config.GetValue(IkUpdateFalloff) < 100))
-                        {
-                            switch (Config.GetValue(UpdateRate))
-                            {
-                                case IkUpdateRate.Half:
-                                skipCount *= 2;
-                                break;
-                                
-                                case IkUpdateRate.Quarter:
-                                skipCount *= 4;
-                                break;
-
-                                case IkUpdateRate.Eighth:
-                                skipCount *= 8;
-                                break;
-
-                                default:
-                                skipCount = 1;
-                                break;
-                            }
-                        }
-                        
-
-                        //The part that actually skips updates
-                        if (vrikList[__instance].UpdateIndex > skipCount) vrikList[__instance].UpdateIndex = 1;
-                        if (vrikList[__instance].UpdateIndex == skipCount)
-                        {
-                            vrikList[__instance].UpdateIndex = 1;
-                            return true;
-                        }
-                        else
-                        {
-                            vrikList[__instance].UpdateIndex += 1;
-                            return false;
-                        }
                     }
-                    return true;
+                    //The part that actually skips updates
+                    if (vrikList[__instance].UpdateIndex > skipCount) vrikList[__instance].UpdateIndex = 1;
+                    if (vrikList[__instance].UpdateIndex == skipCount)
+                    {
+                        vrikList[__instance].UpdateIndex = 1;
+                        return true;
+                    }
+                    else
+                    {
+                        vrikList[__instance].UpdateIndex += 1;
+                        return false;
+                    }
                 }
-                catch (Exception e)
-                {
-                    Debug("Error in OnCommonUpdatePrefix");
-                    Debug(e.Message);
-                    Debug(e.StackTrace);
-                    return true;
-                }
+                return true;
             }
         }
 
@@ -397,8 +539,6 @@ namespace IkCulling
         //Forces IK to be active when FBT calibrator is created
         [HarmonyPatch(typeof(FullBodyCalibrator), "OnAwake")]
         class FullBodyCalibratorPatch {
-            
-            [HarmonyPostfix]
             static void Postfix(FullBodyCalibrator __instance) {
                 __instance.RunInUpdates(3, ()=> {
                     CalibratorForceIkAutoUpdate(__instance);
@@ -409,12 +549,9 @@ namespace IkCulling
         //Forces IK to be active when pressing "Calibrate Avatar" on the FBT calibrator
         [HarmonyPatch(typeof(FullBodyCalibrator), "CalibrateAvatar")]
         class FullBodyCalibratorAvatarPatch {
-
-            [HarmonyPostfix]
             static void Postfix(FullBodyCalibrator __instance) {
                 CalibratorForceIkAutoUpdate(__instance);
             }
-            
         }    
     }
 }
