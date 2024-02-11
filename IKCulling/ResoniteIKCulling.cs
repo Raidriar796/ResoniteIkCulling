@@ -112,15 +112,21 @@ namespace IkCulling
 
         public override string Name => "ResoniteIkCulling";
         public override string Author => "Raidriar796 & KyuubiYoru";
-        public override string Version => "2.6.0";
+        public override string Version => "2.6.1";
         public override string Link => "https://github.com/Raidriar796/ResoniteIkCulling";
 
         public override void OnEngineInit()
         {
             try
             {
-                Harmony harmony = new Harmony("net.raidriar796.ResoniteIkCulling");
-                harmony.PatchAll();
+                if (ModLoader.VERSION == "2.4.0") OutOfDateNotifier();
+                else if (ModLoader.VERSION == "2.5.0") OutOfDateNotifier();
+                else if (ModLoader.VERSION == "2.5.1") OutOfDateNotifier();
+                else
+                {
+                    Harmony harmony = new Harmony("net.raidriar796.ResoniteIkCulling");
+                    harmony.PatchAll();
+                }
 
                 Config = GetConfiguration();
 
@@ -156,6 +162,11 @@ namespace IkCulling
             MinCullingRange.OnChanged += (value) => { UpdateMinRange(); };
             MaxViewRange.OnChanged += (value) => { UpdateMaxRange(); };
             IkUpdateFalloff.OnChanged += (value) => { UpdateFalloff(); };
+        }
+
+        public static void OutOfDateNotifier()
+        {
+            Msg("Mod loader version out of date, please update to version 2.6.0 or later");
         }
 
         //Variables
