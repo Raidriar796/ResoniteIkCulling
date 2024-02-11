@@ -16,7 +16,7 @@ namespace IkCulling
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> Enabled =
             new ModConfigurationKey<bool>(
                 "Enabled",
-                "ResoniteIkCulling is Enabled.",
+                "Enabled",
                 () => true);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer1 =
@@ -128,8 +128,9 @@ namespace IkCulling
             }
             catch (Exception e)
             {
-                Error(e.Message);
-                Error(e.ToString());
+                Msg("Error on startup");
+                Debug(e.Message);
+                Debug(e.ToString());
                 throw;
             }
 
@@ -327,10 +328,12 @@ namespace IkCulling
                 vrikList.Add(__instance, new Variables());
             }
 
-            //Searches and removes all null IK in dictionary whenever an IK is added
             foreach (var item in vrikList)
             {
-                if (item.Key == null) vrikList.Remove(item.Key);
+                if (item.Key == null)
+                {
+                    vrikList.Remove(item.Key);
+                }
             }
         }
 
@@ -341,51 +344,50 @@ namespace IkCulling
             [HarmonyPatch("OnCommonUpdate")]
             private static bool OnCommonUpdatePrefix(VRIKAvatar __instance)
             {
-                //IkCulling is disabled
-                if (!Config.GetValue(Enabled)) return true;
-                    
-                //Ik is disabled
-                if (!__instance.Enabled) return false;
-
-                //User is Headless
-                if (ModLoader.IsHeadless) return false;
-
-                //Always skip local Ik
-                if (__instance.IsUnderLocalUser && __instance.IsEquipped) return true;
-
-                //Too few users
-                if (__instance.Slot.World.UserCount < Config.GetValue(MinUserCount)) return true;
-
-                //Platform dash is open or user is not focused on window
-                if (Config.GetValue(DisableOnDashboard))
-                {
-                    if (__instance.LocalUser.VR_Active)
-                    {
-                        if (__instance.LocalUser.IsPlatformDashOpened) return false;
-                    }
-                    else
-                    {
-                        if (!Application.isFocused) return false;
-                    }
-                }
-                    
-                //No active user
-                if (Config.GetValue(DisableIkWithoutUser) && !__instance.IsEquipped) return false;
-
-                //Users not present
-                if (Config.GetValue(DisableAfkUser) && __instance.Slot.ActiveUser != null &&
-                    !__instance.Slot.ActiveUser.IsPresentInWorld) return false;
-
-                float3 playerPos = __instance.Slot.World.LocalUserViewPosition;
-                float3 ikPos = __instance.HeadProxy.GlobalPosition;
-
-                float dist = MathX.DistanceSqr(playerPos, ikPos);
-
-                float LocalUserScale = __instance.LocalUserRoot.GlobalScale;
-                float OtherUserScale = __instance.Slot.ActiveUser.Root.GlobalScale;
-
                 try
                 {
+                    //IkCulling is disabled
+                    if (!Config.GetValue(Enabled)) return true;
+                        
+                    //Ik is disabled
+                    if (!__instance.Enabled) return false;
+
+                    //User is Headless
+                    if (ModLoader.IsHeadless) return false;
+
+                    //Always skip local Ik
+                    if (__instance.IsUnderLocalUser && __instance.IsEquipped) return true;
+
+                    //Too few users
+                    if (__instance.Slot.World.UserCount < Config.GetValue(MinUserCount)) return true;
+
+                    //Platform dash is open or user is not focused on window
+                    if (Config.GetValue(DisableOnDashboard))
+                    {
+                        if (__instance.LocalUser.VR_Active)
+                        {
+                            if (__instance.LocalUser.IsPlatformDashOpened) return false;
+                        }
+                        else
+                        {
+                            if (!Application.isFocused) return false;
+                        }
+                    }
+                        
+                    //No active user
+                    if (Config.GetValue(DisableIkWithoutUser) && !__instance.IsEquipped) return false;
+
+                    //Users not present
+                    if (Config.GetValue(DisableAfkUser) && __instance.Slot.ActiveUser != null &&
+                        !__instance.Slot.ActiveUser.IsPresentInWorld) return false;
+
+                    float3 playerPos = __instance.Slot.World.LocalUserViewPosition;
+                    float3 ikPos = __instance.HeadProxy.GlobalPosition;
+
+                    float dist = MathX.DistanceSqr(playerPos, ikPos);
+
+                    float LocalUserScale = __instance.LocalUserRoot.GlobalScale;
+                    
                     switch (Config.GetValue(ScaleComp))
                     {
                         case ScaleCompType.None:
@@ -395,7 +397,7 @@ namespace IkCulling
                         dist /= LocalUserScale * LocalUserScale;
                         if (__instance.IsEquipped)
                         {
-                            dist /= OtherUserScale * OtherUserScale;
+                            dist /= __instance.Slot.ActiveUser.Root.GlobalScale * __instance.Slot.ActiveUser.Root.GlobalScale;
                         }
                         break;
                                         
@@ -406,123 +408,122 @@ namespace IkCulling
                         case ScaleCompType.OtherUserScale:
                         if (__instance.IsEquipped)
                         {
-                            dist /= OtherUserScale * OtherUserScale;
+                            dist /= __instance.Slot.ActiveUser.Root.GlobalScale * __instance.Slot.ActiveUser.Root.GlobalScale;
                         }
                         break;
 
                         default:
                         break;
                     }
-                }
-                catch (Exception e)
-                {
-                    Msg("Error in scale compensation");
-                    Error(e.Message);
-                    Error(e.StackTrace);
-                    return true;
-                }
 
-                //Checks if IK is within min range and in view
-                if (dist > MinCullingRangeSqr &&
-                MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < FOVDegToDot) 
-                return false;
+                    //Checks if IK is within min range and in view
+                    if (dist > MinCullingRangeSqr &&
+                    MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < FOVDegToDot) 
+                    return false;
 
-                //Check if IK is outside of max range
-                if (dist > MaxViewRangeSqr) 
-                return false;
-                    
-                //IK throttling
-                if ((Config.GetValue(IkUpdateFalloff) < 100) || 
-                (Config.GetValue(UpdateRate) != IkUpdateRate.Full))
-                {
-
-                    //Adds an IK instance to the list if it's not already
-                    if (!vrikList.ContainsKey(__instance))
+                    //Check if IK is outside of max range
+                    if (dist > MaxViewRangeSqr) 
+                    return false;
+                        
+                    //IK throttling
+                    if ((Config.GetValue(IkUpdateFalloff) < 100) || 
+                    (Config.GetValue(UpdateRate) != IkUpdateRate.Full))
                     {
-                        vrikList.Add(__instance, new Variables());
-                        return true;
-                    }
-                    byte skipCount = 1;
-
-                    //Update skips for falloff
-                    if (Config.GetValue(IkUpdateFalloff) < 100) 
-                    {
-                        if (dist > FalloffStep5)
+                        //Adds an IK instance to the list if it's not already
+                        if (!vrikList.ContainsKey(__instance))
                         {
-                            skipCount = 6;
+                            vrikList.Add(__instance, new Variables());
+                            return true;
                         }
-                        else if (dist > FalloffStep4)
-                        {
-                            skipCount = 5;
-                        }
-                        else if (dist > FalloffStep3)
-                        {
-                            skipCount = 4;
-                        }
-                        else if (dist > FalloffStep2)
-                        {
-                            skipCount = 3;
-                        }
-                        else if (dist > FalloffStep1)
-                        {
-                            skipCount = 2;
-                        }
-                    }
+                        byte skipCount = 1;
 
-                    //Update skips lower update rate
-                    else switch (Config.GetValue(UpdateRate))
-                    {
-                        case IkUpdateRate.Half:
-                        skipCount = 2;
-                        break;
-                                        
-                        case IkUpdateRate.Quarter:
-                        skipCount = 4;
-                        break;
+                        //Update skips for falloff
+                        if (Config.GetValue(IkUpdateFalloff) < 100) 
+                        {
+                            if (dist > FalloffStep5)
+                            {
+                                skipCount = 6;
+                            }
+                            else if (dist > FalloffStep4)
+                            {
+                                skipCount = 5;
+                            }
+                            else if (dist > FalloffStep3)
+                            {
+                                skipCount = 4;
+                            }
+                            else if (dist > FalloffStep2)
+                            {
+                                skipCount = 3;
+                            }
+                            else if (dist > FalloffStep1)
+                            {
+                                skipCount = 2;
+                            }
+                        }
 
-                        case IkUpdateRate.Eighth:
-                        skipCount = 8;
-                        break;
-
-                        default:
-                        skipCount = 1;
-                        break;
-                    }
-
-                    //Update skips for falloff + lower update rate
-                    if (Config.GetValue(UpdateRate) != IkUpdateRate.Full && (Config.GetValue(IkUpdateFalloff) < 100))
-                    {
-                        switch (Config.GetValue(UpdateRate))
+                        //Update skips lower update rate
+                        else switch (Config.GetValue(UpdateRate))
                         {
                             case IkUpdateRate.Half:
-                            skipCount *= 2;
+                            skipCount = 2;
                             break;
-                                                
+                                            
                             case IkUpdateRate.Quarter:
-                            skipCount *= 4;
+                            skipCount = 4;
                             break;
 
                             case IkUpdateRate.Eighth:
-                            skipCount *= 8;
+                            skipCount = 8;
                             break;
 
                             default:
                             skipCount = 1;
                             break;
                         }
+
+                        //Update skips for falloff + lower update rate
+                        if (Config.GetValue(UpdateRate) != IkUpdateRate.Full && (Config.GetValue(IkUpdateFalloff) < 100))
+                        {
+                            switch (Config.GetValue(UpdateRate))
+                            {
+                                case IkUpdateRate.Half:
+                                skipCount *= 2;
+                                break;
+                                                    
+                                case IkUpdateRate.Quarter:
+                                skipCount *= 4;
+                                break;
+
+                                case IkUpdateRate.Eighth:
+                                skipCount *= 8;
+                                break;
+
+                                default:
+                                skipCount = 1;
+                                break;
+                            }
+                        }
+                        //The part that actually skips updates
+                        if (vrikList[__instance].UpdateIndex > skipCount) vrikList[__instance].UpdateIndex = 1;
+                        if (vrikList[__instance].UpdateIndex == skipCount)
+                        {
+                            vrikList[__instance].UpdateIndex = 1;
+                            return true;
+                        }
+                        else
+                        {
+                            vrikList[__instance].UpdateIndex += 1;
+                            return false;
+                        }
                     }
-                    //The part that actually skips updates
-                    if (vrikList[__instance].UpdateIndex > skipCount) vrikList[__instance].UpdateIndex = 1;
-                    if (vrikList[__instance].UpdateIndex == skipCount)
-                    {
-                        vrikList[__instance].UpdateIndex = 1;
-                        return true;
-                    }
-                    else
-                    {
-                        vrikList[__instance].UpdateIndex += 1;
-                        return false;
-                    }
+                }
+                catch(Exception e)
+                {
+                    Msg("Error OnCommonUpdatePatch");
+                    Debug(e.Message);
+                    Debug(e.StackTrace);
+                    return true;
                 }
                 return true;
             }
