@@ -7,9 +7,9 @@
         <AssemblyTitle>ResoniteIKCulling</AssemblyTitle>
         <Authors>Raidriar796</Authors>
         <Copyright>Copyright © 2024 Raidriar796</Copyright>
-        <Version>2.6.1</Version>
-        <AssemblyVersion>2.6.1.0</AssemblyVersion>
-        <FileVersion>2.6.1.0</FileVersion>
+        <Version>2.6.2</Version>
+        <AssemblyVersion>2.6.2.0</AssemblyVersion>
+        <FileVersion>2.6.2.0</FileVersion>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <TargetFramework>net472</TargetFramework>
         <FileAlignment>512</FileAlignment>
