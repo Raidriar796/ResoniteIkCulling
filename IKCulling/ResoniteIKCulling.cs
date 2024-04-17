@@ -39,25 +39,25 @@ namespace IkCulling
             new ModConfigurationKey<float?>(
                 "FOV",
                 "Enable to force specific culling FOV, automatic when disabled.",
-                () => null, false, v => v <= 100 && v >= 0 || v == null);
+                () => null, false, v => v <= 180 && v >= 0 || v == null);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<byte> MinUserCount =
             new ModConfigurationKey<byte>(
                 "MinUserCount",
                 "Minimum amount of users in the world to enable culling.",
-                () => 3);
+                () => 3, false, v => v >= 0);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> MinCullingRange =
             new ModConfigurationKey<float>(
                 "MinCullingRange",
                 "Minimum range for IK to always be enabled, useful for mirrors.",
-                () => 4f);
+                () => 4f, false, v => v >= 0);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> MaxViewRange =
             new ModConfigurationKey<float>(
                 "MaxViewRange",
                 "Maximum range before fully disabling IK.",
-                () => 30f);
+                () => 30f, false, v => v >= 0);
 
         [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer3 =
             new ModConfigurationKey<dummy>(
@@ -112,7 +112,7 @@ namespace IkCulling
 
         public override string Name => "ResoniteIkCulling";
         public override string Author => "Raidriar796 & KyuubiYoru";
-        public override string Version => "2.6.1";
+        public override string Version => "2.6.2";
         public override string Link => "https://github.com/Raidriar796/ResoniteIkCulling";
 
         public override void OnEngineInit()
@@ -140,7 +140,6 @@ namespace IkCulling
                 throw;
             }
 
-            
             Engine.Current.RunPostInit(() =>
             {
                 if (Engine.Current.SystemInfo.HeadDevice.IsVR())
@@ -150,7 +149,6 @@ namespace IkCulling
 
                 //Calling the methods on start instead of declaring the
                 //variables with method calls because rml doesn't like that
-                UpdateFOV();
                 UpdateMinRange();
                 UpdateMaxRange();
                 UpdateFalloff();
@@ -171,6 +169,7 @@ namespace IkCulling
 
         //Variables
         private static Headset UserHeadset = Headset.Unknown;
+        private static DesktopRenderSettings RenderSettingsInstance = null;
         private static float FOVDegToDot = 0f;
         private static float MinCullingRangeSqr = 0f;
         private static float MaxViewRangeSqr = 0f;
@@ -258,24 +257,14 @@ namespace IkCulling
         }
 
         //Updates FOV when settings are fetched on startup
-        [HarmonyPatch(typeof(Settings))]
-        public class SettingsFetchPatch
+        [HarmonyPatch(typeof(DesktopRenderSettings), "OnAwake")]
+        public class FOVSettingFetchPatch()
         {
-            [HarmonyPatch("GetSettings")]
-            private static void Postfix()
+            private static void Postfix(DesktopRenderSettings __instance)
             {
-                UpdateFOV();
-            }
-        }
+                RenderSettingsInstance = __instance;
 
-        //Updates FOV when settings are saved
-        [HarmonyPatch(typeof(SettingsDialog))]
-        public class SettingsSavePatch
-        {
-            [HarmonyPatch("OnSaveSettings")]
-            private static void Postfix()
-            {
-                UpdateFOV();
+                RenderSettingsInstance.Changed += (FieldOfView) => { UpdateFOV(); };
             }
         }
 
@@ -291,7 +280,7 @@ namespace IkCulling
                 else
                 {
                     //Value assigned when in desktop
-                    FOVDegToDot = MathX.Cos(MathX.Deg2Rad * Settings.ReadValue("Settings.Graphics.DesktopFOV", 60f));
+                    FOVDegToDot = MathX.Cos(MathX.Deg2Rad * ((RenderSettingsInstance != null) ? RenderSettingsInstance.FieldOfView.Value : 60f));
                 }
             }
             else
