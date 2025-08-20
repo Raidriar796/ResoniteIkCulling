@@ -385,10 +385,14 @@ namespace IkCulling
                         {
                             if (__instance.LocalUser.IsPlatformDashOpened) return false;
                         }
-                        else
-                        {
-                            if (!Application.isFocused) return false;
-                        }
+                        // TODO: reimplement later
+                        // This used to interface with Unity, but a new mechanism will be needed
+                        // now after the splittening.
+
+                        // else
+                        // {
+                        //     if (!Application.isFocused) return false;
+                        // }
                     }
 
                     //No active user
