@@ -5,6 +5,7 @@ using FrooxEngine;
 using FrooxEngine.FinalIK;
 using HarmonyLib;
 using ResoniteModLoader;
+using Renderite.Shared;
 
 namespace IkCulling
 {
@@ -158,11 +159,6 @@ namespace IkCulling
 
             Engine.Current.RunPostInit(() =>
             {
-                if (Engine.Current.SystemInfo.HeadDevice.IsVR())
-                {
-                    DiscoverHeadset();
-                }
-
                 //Calling the methods on start instead of declaring the
                 //variables with method calls because rml doesn't like that
                 UpdateMinRange();
@@ -184,9 +180,9 @@ namespace IkCulling
         }
 
         //Variables
-        private static Headset UserHeadset = Headset.Unknown;
         private static DesktopRenderSettings RenderSettingsInstance = null;
         private static float FOVDegToDot = 0f;
+        private const float VRDegToDot = -0.1736482f; //MathX.Cos(MathX.Deg2Rad * 100.0f)
         private static float MinCullingRangeSqr = 0f;
         private static float MaxViewRangeSqr = 0f;
         private static float PercentAsFloat = 0f;
@@ -203,65 +199,12 @@ namespace IkCulling
             YourUserScale,
             OtherUserScale
         }
-        //Value is exact or average FOV per headset(s)
-        public enum Headset : byte
-        {
-            Beyond = 102,
-            Index = 108,
-            Pico = 102,
-            Pimax = 150,
-            Quest = 101,
-            Reverb = 97,
-            Rift = 89,
-            Unknown = 100,
-            Vive = 103
-        }
         public enum IkUpdateRate
         {
             Full,
             Half,
             Quarter,
             Eighth
-        }
-        //Since this is retrieving hardware info instead of checking a known list,
-        //this instead checks common words headset info may return to guess
-        //what headset a user is using, until a better solution is found
-        public static void DiscoverHeadset()
-        {
-            string XRDeviceModel = Engine.Current.SystemInfo.XRDeviceModel;
-
-            if (XRDeviceModel.Contains("Beyond"))
-            {
-                UserHeadset = Headset.Beyond;
-            }
-            else if (XRDeviceModel.Contains("Index"))
-            {
-                UserHeadset = Headset.Index;
-            }
-            else if (XRDeviceModel.Contains("Pico"))
-            {
-                UserHeadset = Headset.Pico;
-            }
-            else if (XRDeviceModel.Contains("Pimax"))
-            {
-                UserHeadset = Headset.Pimax;
-            }
-            else if (XRDeviceModel.Contains("Quest"))
-            {
-                UserHeadset = Headset.Quest;
-            }
-            else if (XRDeviceModel.Contains("Reverb"))
-            {
-                UserHeadset = Headset.Reverb;
-            }
-            else if (XRDeviceModel.Contains("Rift"))
-            {
-                UserHeadset = Headset.Rift;
-            }
-            else if (XRDeviceModel.Contains("Vive"))
-            {
-                UserHeadset = Headset.Vive;
-            }
         }
 
         //Populated to every IK in dictionary.
@@ -288,15 +231,15 @@ namespace IkCulling
         {
             if (!Config.GetValue(FOV).HasValue)
             {
-                if (Engine.Current.SystemInfo.HeadDevice.IsVR())
+                if (Engine.Current.WorldManager.FocusedWorld.LocalUser.HeadDevice.IsVR())
                 {
                     //Value assigned when in VR
-                    FOVDegToDot = MathX.Cos(MathX.Deg2Rad * (float)UserHeadset);
+                    FOVDegToDot = VRDegToDot;
                 }
                 else
                 {
                     //Value assigned when in desktop
-                    FOVDegToDot = MathX.Cos(MathX.Deg2Rad * ((RenderSettingsInstance != null) ? RenderSettingsInstance.FieldOfView.Value : 60f));
+                    FOVDegToDot = MathX.Cos(MathX.Deg2Rad * ((!RenderSettingsInstance.IsDestroyed) ? RenderSettingsInstance.FieldOfView.Value : 60f));
                 }
             }
             else
