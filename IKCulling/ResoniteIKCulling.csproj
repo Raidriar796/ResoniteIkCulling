@@ -35,15 +35,15 @@
             <Private>False</Private>
         </Reference>
         <Reference Include="FrooxEngine">
-            <HintPath>$(ResonitePath)Resonite_Data\Managed\FrooxEngine.dll</HintPath>
+            <HintPath>$(ResonitePath)FrooxEngine.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="Elements.Core">
-            <HintPath>$(ResonitePath)Resonite_Data\Managed\Elements.Core.dll</HintPath>
+            <HintPath>$(ResonitePath)Elements.Core.dll</HintPath>
             <Private>False</Private>
         </Reference>
-        <Reference Include="UnityEngine.CoreModule">
-            <HintPath>$(ResonitePath)Resonite_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+        <Reference Include="Renderite.Shared">
+            <HintPath>$(ResonitePath)Renderite.Shared.dll</HintPath>
             <Private>False</Private>
         </Reference>
     </ItemGroup>
