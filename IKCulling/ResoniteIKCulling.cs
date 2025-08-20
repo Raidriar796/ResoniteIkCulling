@@ -181,6 +181,7 @@ namespace IkCulling
 
         //Variables
         private static DesktopRenderSettings RenderSettingsInstance = null;
+        private static bool ApplicationFocus = true;
         private static float FOVDegToDot = 0f;
         private const float VRDegToDot = -0.1736482f; //MathX.Cos(MathX.Deg2Rad * 100.0f)
         private static float MinCullingRangeSqr = 0f;
@@ -224,6 +225,16 @@ namespace IkCulling
                 RenderSettingsInstance = __instance;
 
                 RenderSettingsInstance.Changed += (FieldOfView) => { UpdateFOV(); };
+            }
+        }
+
+        //Fetches application focus
+        [HarmonyPatch(typeof(InputInterface), "UpdateWindowState")]
+        public class ApplicationFocusPatch()
+        {
+            private static void Postfix(WindowState state)
+            {
+                ApplicationFocus = state.isWindowFocused;
             }
         }
 
@@ -328,14 +339,10 @@ namespace IkCulling
                         {
                             if (__instance.LocalUser.IsPlatformDashOpened) return false;
                         }
-                        // TODO: reimplement later
-                        // This used to interface with Unity, but a new mechanism will be needed
-                        // now after the splittening.
-
-                        // else
-                        // {
-                        //     if (!Application.isFocused) return false;
-                        // }
+                        else
+                        {
+                            if (!ApplicationFocus) return false;
+                        }
                     }
 
                     //No active user
