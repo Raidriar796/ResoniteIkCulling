@@ -5,7 +5,6 @@ using FrooxEngine;
 using FrooxEngine.FinalIK;
 using HarmonyLib;
 using ResoniteModLoader;
-using UnityEngine;
 
 namespace IkCulling
 {
@@ -13,98 +12,115 @@ namespace IkCulling
     {
         public static ModConfiguration Config;
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> Enabled =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<bool> Enabled =
             new ModConfigurationKey<bool>(
                 "Enabled",
                 "Enabled",
                 () => true);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer1 =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<dummy> DummySpacer1 =
             new ModConfigurationKey<dummy>(
                 " ",
                 "");
-        
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer2 =
+
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<dummy> DummySpacer2 =
             new ModConfigurationKey<dummy>(
                 "DummySpacer2",
                 "<b>Culling Behavior Options:</b>");
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<ScaleCompType> ScaleComp =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<ScaleCompType> ScaleComp =
             new ModConfigurationKey<ScaleCompType>(
                 "ScaleComp",
                 "Type of scale compensation used for distance checks.",
                 () => ScaleCompType.None);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float?> FOV = 
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<float?> FOV =
             new ModConfigurationKey<float?>(
                 "FOV",
                 "Enable to force specific culling FOV, automatic when disabled.",
                 () => null, false, v => v <= 180 && v >= 0 || v == null);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<byte> MinUserCount =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<byte> MinUserCount =
             new ModConfigurationKey<byte>(
                 "MinUserCount",
                 "Minimum amount of users in the world to enable culling.",
                 () => 3, false, v => v >= 0);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> MinCullingRange =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<float> MinCullingRange =
             new ModConfigurationKey<float>(
                 "MinCullingRange",
                 "Minimum range for IK to always be enabled, useful for mirrors.",
                 () => 4f, false, v => v >= 0);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<float> MaxViewRange =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<float> MaxViewRange =
             new ModConfigurationKey<float>(
                 "MaxViewRange",
                 "Maximum range before fully disabling IK.",
                 () => 30f, false, v => v >= 0);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer3 =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<dummy> DummySpacer3 =
             new ModConfigurationKey<dummy>(
                 "  ",
                 "");
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer4 =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<dummy> DummySpacer4 =
             new ModConfigurationKey<dummy>(
                 "DummySpacer4",
                 "<b>Extra Culling Options:</b>");
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> DisableAfkUser =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<bool> DisableAfkUser =
             new ModConfigurationKey<bool>(
                 "DisableAfkUser",
                 "Disable IK of users not in the session.",
                 () => true);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> DisableIkWithoutUser =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<bool> DisableIkWithoutUser =
             new ModConfigurationKey<bool>(
                 "DisableIkWithoutUser",
                 "Disable IK without an active user.",
                 () => true);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<bool> DisableOnDashboard =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<bool> DisableOnDashboard =
             new ModConfigurationKey<bool>(
                 "DisableOnInactiveUser",
                 "Disable IK if the SteamVR/Oculus dash is open or the window is not focused on desktop mode.",
                 () => true);
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer5 =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<dummy> DummySpacer5 =
             new ModConfigurationKey<dummy>(
                 "   ",
                 "");
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<dummy> DummySpacer6 =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<dummy> DummySpacer6 =
             new ModConfigurationKey<dummy>(
                 "DummySpacer6",
                 "<b>Throttling Options:</b>");
 
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<IkUpdateRate> UpdateRate =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<IkUpdateRate> UpdateRate =
             new ModConfigurationKey<IkUpdateRate>(
                 "UpdateRate",
                 "Update rate for IK.",
                 () => IkUpdateRate.Full);
 
         [FrooxEngine.Range(0, 100)]
-        [AutoRegisterConfigKey] public static readonly ModConfigurationKey<byte> IkUpdateFalloff =
+        [AutoRegisterConfigKey]
+        public static readonly ModConfigurationKey<byte> IkUpdateFalloff =
             new ModConfigurationKey<byte>(
                 "IkUpdateFalloff",
                 "Reduce IK updates based on distance, threshold is 0 - 100% relative to Max Range.",
@@ -291,12 +307,12 @@ namespace IkCulling
         }
 
         public static void UpdateMinRange()
-        {   
+        {
             MinCullingRangeSqr = MathX.Pow(Config.GetValue(MinCullingRange), 2f);
         }
 
         public static void UpdateMaxRange()
-        {   
+        {
             MaxViewRangeSqr = MathX.Pow(Config.GetValue(MaxViewRange), 2f);
         }
 
@@ -311,7 +327,7 @@ namespace IkCulling
             FalloffStep2 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.2f), 2f);
 
             FalloffStep3 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.4f), 2f);
-            
+
             FalloffStep4 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.6f), 2f);
 
             FalloffStep5 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.8f), 2f);
@@ -324,7 +340,8 @@ namespace IkCulling
         private static void AddToList(VRIKAvatar __instance)
         {
             //Adds IK to list as new instances appear
-            if (!vrikList.ContainsKey(__instance)) {
+            if (!vrikList.ContainsKey(__instance))
+            {
                 vrikList.Add(__instance, new Variables());
             }
 
@@ -348,7 +365,7 @@ namespace IkCulling
                 {
                     //IkCulling is disabled
                     if (!Config.GetValue(Enabled)) return true;
-                        
+
                     //Ik is disabled
                     if (!__instance.Enabled) return false;
 
@@ -373,7 +390,7 @@ namespace IkCulling
                             if (!Application.isFocused) return false;
                         }
                     }
-                        
+
                     //No active user
                     if (Config.GetValue(DisableIkWithoutUser) && !__instance.IsEquipped) return false;
 
@@ -387,46 +404,46 @@ namespace IkCulling
                     float dist = MathX.DistanceSqr(playerPos, ikPos);
 
                     float LocalUserScale = __instance.LocalUserRoot.GlobalScale;
-                    
+
                     switch (Config.GetValue(ScaleComp))
                     {
                         case ScaleCompType.None:
-                        break;
+                            break;
 
                         case ScaleCompType.Relative:
-                        dist /= LocalUserScale * LocalUserScale;
-                        if (__instance.IsEquipped)
-                        {
-                            dist /= __instance.Slot.ActiveUser.Root.GlobalScale * __instance.Slot.ActiveUser.Root.GlobalScale;
-                        }
-                        break;
-                                        
+                            dist /= LocalUserScale * LocalUserScale;
+                            if (__instance.IsEquipped)
+                            {
+                                dist /= __instance.Slot.ActiveUser.Root.GlobalScale * __instance.Slot.ActiveUser.Root.GlobalScale;
+                            }
+                            break;
+
                         case ScaleCompType.YourUserScale:
-                        dist /= LocalUserScale * LocalUserScale;
-                        break;
+                            dist /= LocalUserScale * LocalUserScale;
+                            break;
 
                         case ScaleCompType.OtherUserScale:
-                        if (__instance.IsEquipped)
-                        {
-                            dist /= __instance.Slot.ActiveUser.Root.GlobalScale * __instance.Slot.ActiveUser.Root.GlobalScale;
-                        }
-                        break;
+                            if (__instance.IsEquipped)
+                            {
+                                dist /= __instance.Slot.ActiveUser.Root.GlobalScale * __instance.Slot.ActiveUser.Root.GlobalScale;
+                            }
+                            break;
 
                         default:
-                        break;
+                            break;
                     }
 
                     //Checks if IK is within min range and in view
                     if (dist > MinCullingRangeSqr &&
-                    MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < FOVDegToDot) 
-                    return false;
+                    MathX.Dot((ikPos - playerPos).Normalized, __instance.Slot.World.LocalUserViewRotation * float3.Forward) < FOVDegToDot)
+                        return false;
 
                     //Check if IK is outside of max range
-                    if (dist > MaxViewRangeSqr) 
-                    return false;
-                        
+                    if (dist > MaxViewRangeSqr)
+                        return false;
+
                     //IK throttling
-                    if ((Config.GetValue(IkUpdateFalloff) < 100) || 
+                    if ((Config.GetValue(IkUpdateFalloff) < 100) ||
                     (Config.GetValue(UpdateRate) != IkUpdateRate.Full))
                     {
                         //Adds an IK instance to the list if it's not already
@@ -438,7 +455,7 @@ namespace IkCulling
                         byte skipCount = 1;
 
                         //Update skips for falloff
-                        if (Config.GetValue(IkUpdateFalloff) < 100) 
+                        if (Config.GetValue(IkUpdateFalloff) < 100)
                         {
                             if (dist > FalloffStep5)
                             {
@@ -464,23 +481,23 @@ namespace IkCulling
 
                         //Update skips lower update rate
                         else switch (Config.GetValue(UpdateRate))
-                        {
-                            case IkUpdateRate.Half:
-                            skipCount = 2;
-                            break;
-                                            
-                            case IkUpdateRate.Quarter:
-                            skipCount = 4;
-                            break;
+                            {
+                                case IkUpdateRate.Half:
+                                    skipCount = 2;
+                                    break;
 
-                            case IkUpdateRate.Eighth:
-                            skipCount = 8;
-                            break;
+                                case IkUpdateRate.Quarter:
+                                    skipCount = 4;
+                                    break;
 
-                            default:
-                            skipCount = 1;
-                            break;
-                        }
+                                case IkUpdateRate.Eighth:
+                                    skipCount = 8;
+                                    break;
+
+                                default:
+                                    skipCount = 1;
+                                    break;
+                            }
 
                         //Update skips for falloff + lower update rate
                         if (Config.GetValue(UpdateRate) != IkUpdateRate.Full && (Config.GetValue(IkUpdateFalloff) < 100))
@@ -488,20 +505,20 @@ namespace IkCulling
                             switch (Config.GetValue(UpdateRate))
                             {
                                 case IkUpdateRate.Half:
-                                skipCount *= 2;
-                                break;
-                                                    
+                                    skipCount *= 2;
+                                    break;
+
                                 case IkUpdateRate.Quarter:
-                                skipCount *= 4;
-                                break;
+                                    skipCount *= 4;
+                                    break;
 
                                 case IkUpdateRate.Eighth:
-                                skipCount *= 8;
-                                break;
+                                    skipCount *= 8;
+                                    break;
 
                                 default:
-                                skipCount = 1;
-                                break;
+                                    skipCount = 1;
+                                    break;
                             }
                         }
                         //The part that actually skips updates
@@ -518,7 +535,7 @@ namespace IkCulling
                         }
                     }
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     Msg("Error OnCommonUpdatePatch");
                     Debug(e.Message);
@@ -530,18 +547,23 @@ namespace IkCulling
         }
 
         //Used to search through the entire FBT calibrator to enable "AutoUpdate" on every IK
-        public static void CalibratorForceIkAutoUpdate(FullBodyCalibrator __instance) {
+        public static void CalibratorForceIkAutoUpdate(FullBodyCalibrator __instance)
+        {
             var allVRIK = __instance.Slot.GetComponentsInChildren<VRIK>();
-            foreach (var vrik in allVRIK) {
+            foreach (var vrik in allVRIK)
+            {
                 vrik.AutoUpdate.Value = true;
             }
         }
 
         //Forces IK to be active when FBT calibrator is created
         [HarmonyPatch(typeof(FullBodyCalibrator), "OnAwake")]
-        class FullBodyCalibratorPatch {
-            static void Postfix(FullBodyCalibrator __instance) {
-                __instance.RunInUpdates(3, ()=> {
+        class FullBodyCalibratorPatch
+        {
+            static void Postfix(FullBodyCalibrator __instance)
+            {
+                __instance.RunInUpdates(3, () =>
+                {
                     CalibratorForceIkAutoUpdate(__instance);
                 });
             }
@@ -549,10 +571,12 @@ namespace IkCulling
 
         //Forces IK to be active when pressing "Calibrate Avatar" on the FBT calibrator
         [HarmonyPatch(typeof(FullBodyCalibrator), "CalibrateAvatar")]
-        class FullBodyCalibratorAvatarPatch {
-            static void Postfix(FullBodyCalibrator __instance) {
+        class FullBodyCalibratorAvatarPatch
+        {
+            static void Postfix(FullBodyCalibrator __instance)
+            {
                 CalibratorForceIkAutoUpdate(__instance);
             }
-        }    
+        }
     }
 }
