@@ -42,9 +42,5 @@
             <HintPath>$(ResonitePath)Elements.Core.dll</HintPath>
             <Private>False</Private>
         </Reference>
-        <Reference Include="Renderite.Shared">
-            <HintPath>$(ResonitePath)Renderite.Shared.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
     </ItemGroup>
 </Project>

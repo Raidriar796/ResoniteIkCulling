@@ -5,7 +5,6 @@ using FrooxEngine;
 using FrooxEngine.FinalIK;
 using HarmonyLib;
 using ResoniteModLoader;
-using Renderite.Shared;
 
 namespace IkCulling
 {
