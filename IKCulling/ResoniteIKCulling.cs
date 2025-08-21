@@ -128,7 +128,7 @@ namespace IkCulling
 
         public override string Name => "ResoniteIkCulling";
         public override string Author => "Raidriar796 & KyuubiYoru";
-        public override string Version => "2.6.2";
+        public override string Version => "2.7.0";
         public override string Link => "https://github.com/Raidriar796/ResoniteIkCulling";
 
         public override void OnEngineInit()

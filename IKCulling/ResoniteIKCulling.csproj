@@ -6,10 +6,10 @@
         <RootNamespace>ResoniteIKCulling</RootNamespace>
         <AssemblyTitle>ResoniteIKCulling</AssemblyTitle>
         <Authors>Raidriar796</Authors>
-        <Copyright>Copyright © 2024 Raidriar796</Copyright>
-        <Version>2.6.2</Version>
-        <AssemblyVersion>2.6.2.0</AssemblyVersion>
-        <FileVersion>2.6.2.0</FileVersion>
+        <Copyright>Copyright © 2025 Raidriar796</Copyright>
+        <Version>2.7.0</Version>
+        <AssemblyVersion>2.7.0.0</AssemblyVersion>
+        <FileVersion>2.7.0.0</FileVersion>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <TargetFramework>net9.0</TargetFramework>
         <FileAlignment>512</FileAlignment>
