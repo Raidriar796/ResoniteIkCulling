@@ -164,6 +164,9 @@ namespace IkCulling
                 UpdateMinRange();
                 UpdateMaxRange();
                 UpdateFalloff();
+
+                // Engine.Current.InputInterface.VRActiveChanged += (value) => { UpdateFOV(); };
+                Engine.Current.WorldManager.WorldFocused += (value) => { UpdateFOV(); };
             });
 
             //Sets up variables to avoid redundant calculations per ik per frame
@@ -180,10 +183,8 @@ namespace IkCulling
         }
 
         //Variables
-        private static DesktopRenderSettings RenderSettingsInstance = null;
-        private static bool ApplicationFocus = true;
         private static float FOVDegToDot = 0f;
-        private const float VRDegToDot = -0.1736482f; //MathX.Cos(MathX.Deg2Rad * 100.0f)
+        private const float VRDegToDot = -0.1736482f; //MathX.Cos(MathX.Deg2Rad * 100.0f
         private static float MinCullingRangeSqr = 0f;
         private static float MaxViewRangeSqr = 0f;
         private static float PercentAsFloat = 0f;
@@ -216,23 +217,11 @@ namespace IkCulling
             public byte UpdateIndex = 1;
         }
 
-        //Updates FOV when settings are fetched on startup
-        [HarmonyPatch(typeof(DesktopRenderSettings), "OnAwake")]
-        public class FOVSettingFetchPatch()
-        {
-            private static void Postfix(DesktopRenderSettings __instance)
-            {
-                RenderSettingsInstance = __instance;
-
-                RenderSettingsInstance.Changed += (FieldOfView) => { UpdateFOV(); };
-            }
-        }
-
         public static void UpdateFOV()
         {
             if (!Config.GetValue(FOV).HasValue)
             {
-                if (Engine.Current.WorldManager.FocusedWorld.LocalUser.HeadDevice.IsVR())
+                if (Engine.Current.WorldManager.FocusedWorld.LocalUser.GetScreen() == null)
                 {
                     //Value assigned when in VR
                     FOVDegToDot = VRDegToDot;
@@ -240,7 +229,7 @@ namespace IkCulling
                 else
                 {
                     //Value assigned when in desktop
-                    FOVDegToDot = MathX.Cos(MathX.Deg2Rad * ((!RenderSettingsInstance.IsDestroyed) ? RenderSettingsInstance.FieldOfView.Value : 60f));
+                    FOVDegToDot = MathX.Cos(MathX.Deg2Rad * Engine.Current.WorldManager.FocusedWorld.LocalUserDesktopFOV);
                 }
             }
             else
