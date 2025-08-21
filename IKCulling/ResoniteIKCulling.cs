@@ -134,28 +134,10 @@ namespace IkCulling
 
         public override void OnEngineInit()
         {
-            try
-            {
-                if (ModLoader.VERSION == "2.4.0") OutOfDateNotifier();
-                else if (ModLoader.VERSION == "2.5.0") OutOfDateNotifier();
-                else if (ModLoader.VERSION == "2.5.1") OutOfDateNotifier();
-                else
-                {
-                    Harmony harmony = new Harmony("net.raidriar796.ResoniteIkCulling");
-                    harmony.PatchAll();
-                }
-
-                Config = GetConfiguration();
-
-                Config.Save(true);
-            }
-            catch (Exception e)
-            {
-                Msg("Error on startup");
-                Debug(e.Message);
-                Debug(e.ToString());
-                throw;
-            }
+            Harmony harmony = new Harmony("net.raidriar796.ResoniteIkCulling");
+            harmony.PatchAll();
+            Config = GetConfiguration();
+            Config.Save(true);
 
             Engine.Current.RunPostInit(() =>
             {
@@ -175,11 +157,6 @@ namespace IkCulling
             MinCullingRange.OnChanged += (value) => { UpdateMinRange(); };
             MaxViewRange.OnChanged += (value) => { UpdateMaxRange(); };
             IkUpdateFalloff.OnChanged += (value) => { UpdateFalloff(); };
-        }
-
-        public static void OutOfDateNotifier()
-        {
-            Msg("Mod loader version out of date, please update to version 2.6.0 or later");
         }
 
         //Variables
