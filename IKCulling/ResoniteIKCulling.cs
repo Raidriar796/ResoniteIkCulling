@@ -228,16 +228,6 @@ namespace IkCulling
             }
         }
 
-        //Fetches application focus
-        [HarmonyPatch(typeof(InputInterface), "UpdateWindowState")]
-        public class ApplicationFocusPatch()
-        {
-            private static void Postfix(WindowState state)
-            {
-                ApplicationFocus = state.isWindowFocused;
-            }
-        }
-
         public static void UpdateFOV()
         {
             if (!Config.GetValue(FOV).HasValue)
@@ -341,7 +331,7 @@ namespace IkCulling
                         }
                         else
                         {
-                            if (!ApplicationFocus) return false;
+                            if (!Engine.Current.InputInterface.IsWindowFocused) return false;
                         }
                     }
 
