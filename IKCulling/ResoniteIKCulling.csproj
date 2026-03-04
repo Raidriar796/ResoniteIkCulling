@@ -25,15 +25,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Reference Include="ResoniteModLoader">
-            <HintPath>$(ResonitePath)Libraries\ResoniteModLoader.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
-        <Reference Include="HarmonyLib">
-            <HintPath>$(ResonitePath)rml_libs\0Harmony.dll</HintPath>
-            <HintPath Condition="Exists('$(ResonitePath)0Harmony.dll')">$(ResonitePath)rml_libs\0Harmony.dll</HintPath>
-            <Private>False</Private>
-        </Reference>
+    <PackageReference Include="ResoniteModLoader" Version="5.0.0" />
+    <PackageReference Include="Lib.Harmony" Version="2.4.2" />
         <Reference Include="FrooxEngine">
             <HintPath>$(ResonitePath)FrooxEngine.dll</HintPath>
             <Private>False</Private>
