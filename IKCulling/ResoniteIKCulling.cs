@@ -22,7 +22,7 @@ namespace IkCulling
         [AutoRegisterConfigKey]
         public static readonly ModConfigurationKey<dummy> DummySpacer1 =
             new ModConfigurationKey<dummy>(
-                " ",
+                "DummySpacer1",
                 "");
 
         [AutoRegisterConfigKey]
@@ -69,7 +69,7 @@ namespace IkCulling
         [AutoRegisterConfigKey]
         public static readonly ModConfigurationKey<dummy> DummySpacer3 =
             new ModConfigurationKey<dummy>(
-                "  ",
+                "DummySpacer3",
                 "");
 
         [AutoRegisterConfigKey]
@@ -102,7 +102,7 @@ namespace IkCulling
         [AutoRegisterConfigKey]
         public static readonly ModConfigurationKey<dummy> DummySpacer5 =
             new ModConfigurationKey<dummy>(
-                "   ",
+                "DummySpacer5",
                 "");
 
         [AutoRegisterConfigKey]
@@ -195,7 +195,7 @@ namespace IkCulling
 
         public static void UpdateFOV()
         {
-            if (!Config.GetValue(FOV).HasValue)
+            if (!FOV.Value.HasValue)
             {
                 if (Engine.Current.WorldManager.FocusedWorld.LocalUser.GetScreen() == null)
                 {
@@ -211,35 +211,35 @@ namespace IkCulling
             else
             {
                 //Value assigned when user manually specifies FOV
-                FOVDegToDot = MathX.Cos(MathX.Deg2Rad * Config.GetValue(FOV).Value);
+                FOVDegToDot = MathX.Cos(MathX.Deg2Rad * FOV.Value.Value);
             }
         }
 
         public static void UpdateMinRange()
         {
-            MinCullingRangeSqr = MathX.Pow(Config.GetValue(MinCullingRange), 2f);
+            MinCullingRangeSqr = MathX.Pow(MinCullingRange.Value, 2f);
         }
 
         public static void UpdateMaxRange()
         {
-            MaxViewRangeSqr = MathX.Pow(Config.GetValue(MaxViewRange), 2f);
+            MaxViewRangeSqr = MathX.Pow(MaxViewRange.Value, 2f);
         }
 
         public static void UpdateFalloff()
         {
-            PercentAsFloat = Config.GetValue(IkUpdateFalloff) * 0.01f;
+            PercentAsFloat = IkUpdateFalloff.Value * 0.01f;
 
-            Threshold = MathX.Lerp(0f, Config.GetValue(MaxViewRange), PercentAsFloat);
+            Threshold = MathX.Lerp(0f, MaxViewRange.Value, PercentAsFloat);
 
             FalloffStep1 = MathX.Pow(Threshold, 2f);
 
-            FalloffStep2 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.2f), 2f);
+            FalloffStep2 = MathX.Pow(MathX.Lerp(Threshold, MaxViewRange.Value, 0.2f), 2f);
 
-            FalloffStep3 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.4f), 2f);
+            FalloffStep3 = MathX.Pow(MathX.Lerp(Threshold, MaxViewRange.Value, 0.4f), 2f);
 
-            FalloffStep4 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.6f), 2f);
+            FalloffStep4 = MathX.Pow(MathX.Lerp(Threshold, MaxViewRange.Value, 0.6f), 2f);
 
-            FalloffStep5 = MathX.Pow(MathX.Lerp(Threshold, Config.GetValue(MaxViewRange), 0.8f), 2f);
+            FalloffStep5 = MathX.Pow(MathX.Lerp(Threshold, MaxViewRange.Value, 0.8f), 2f);
         }
 
         static Dictionary<VRIKAvatar, Variables> vrikList = new Dictionary<VRIKAvatar, Variables>();
@@ -273,7 +273,7 @@ namespace IkCulling
                 try
                 {
                     //IkCulling is disabled
-                    if (!Config.GetValue(Enabled)) return true;
+                    if (!Enabled.Value) return true;
 
                     //Ik is disabled
                     if (!__instance.Enabled) return false;
@@ -285,10 +285,10 @@ namespace IkCulling
                     if (__instance.IsUnderLocalUser && __instance.IsEquipped) return true;
 
                     //Too few users
-                    if (__instance.Slot.World.UserCount < Config.GetValue(MinUserCount)) return true;
+                    if (__instance.Slot.World.UserCount < MinUserCount.Value) return true;
 
                     //Platform dash is open or user is not focused on window
-                    if (Config.GetValue(DisableOnDashboard))
+                    if (DisableOnDashboard.Value)
                     {
                         if (__instance.LocalUser.VR_Active)
                         {
@@ -301,10 +301,10 @@ namespace IkCulling
                     }
 
                     //No active user
-                    if (Config.GetValue(DisableIkWithoutUser) && !__instance.IsEquipped) return false;
+                    if (DisableIkWithoutUser.Value && !__instance.IsEquipped) return false;
 
                     //Users not present
-                    if (Config.GetValue(DisableAfkUser) && __instance.Slot.ActiveUser != null &&
+                    if (DisableAfkUser.Value && __instance.Slot.ActiveUser != null &&
                         !__instance.Slot.ActiveUser.IsPresentInWorld) return false;
 
                     float3 playerPos = __instance.Slot.World.LocalUserViewPosition;
@@ -314,7 +314,7 @@ namespace IkCulling
 
                     float LocalUserScale = __instance.LocalUserRoot.GlobalScale;
 
-                    switch (Config.GetValue(ScaleComp))
+                    switch (ScaleComp.Value)
                     {
                         case ScaleCompType.None:
                             break;
@@ -352,8 +352,8 @@ namespace IkCulling
                         return false;
 
                     //IK throttling
-                    if ((Config.GetValue(IkUpdateFalloff) < 100) ||
-                    (Config.GetValue(UpdateRate) != IkUpdateRate.Full))
+                    if ((IkUpdateFalloff.Value < 100) ||
+                    (UpdateRate.Value != IkUpdateRate.Full))
                     {
                         //Adds an IK instance to the list if it's not already
                         if (!vrikList.ContainsKey(__instance))
@@ -364,7 +364,7 @@ namespace IkCulling
                         byte skipCount = 1;
 
                         //Update skips for falloff
-                        if (Config.GetValue(IkUpdateFalloff) < 100)
+                        if (IkUpdateFalloff.Value < 100)
                         {
                             if (dist > FalloffStep5)
                             {
@@ -389,7 +389,7 @@ namespace IkCulling
                         }
 
                         //Update skips lower update rate
-                        else switch (Config.GetValue(UpdateRate))
+                        else switch (UpdateRate.Value)
                             {
                                 case IkUpdateRate.Half:
                                     skipCount = 2;
@@ -409,9 +409,9 @@ namespace IkCulling
                             }
 
                         //Update skips for falloff + lower update rate
-                        if (Config.GetValue(UpdateRate) != IkUpdateRate.Full && (Config.GetValue(IkUpdateFalloff) < 100))
+                        if (UpdateRate.Value != IkUpdateRate.Full && (IkUpdateFalloff.Value < 100))
                         {
-                            switch (Config.GetValue(UpdateRate))
+                            switch (UpdateRate.Value)
                             {
                                 case IkUpdateRate.Half:
                                     skipCount *= 2;
